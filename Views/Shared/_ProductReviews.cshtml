@@ -1,0 +1,195 @@
+@model FashionStore.Models.Product
+@using Microsoft.EntityFrameworkCore
+@{
+    var userId = User.FindFirst("UserId")?.Value;
+    var reviews = Model.Reviews?.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt).ToList() ?? new List<FashionStore.Models.Review>();
+    var totalReviews = reviews.Count;
+    var averageRating = totalReviews > 0 ? reviews.Average(r => r.Rating) : 0;
+    
+    // Kiểm tra khách hàng đã mua và chưa đánh giá
+    bool canReview = false;
+    if (User.Identity?.IsAuthenticated == true && !string.IsNullOrEmpty(userId))
+    {
+        var userIdInt = int.Parse(userId);
+        var context = ViewContext.HttpContext.RequestServices
+            .GetRequiredService<FashionStore.Data.ApplicationDbContext>();
+            
+        var hasPurchased = context.OrderDetails
+            .Include(od => od.Order)
+            .Include(od => od.Variant)
+            .Any(od => od.Order!.UserId == userIdInt && 
+                      od.Variant!.ProductId == Model.ProductId &&
+                      od.Order.Status == "Delivered");
+                      
+        var hasReviewed = Model.Reviews?.Any(r => r.UserId == userIdInt) ?? false;
+        canReview = hasPurchased && !hasReviewed;
+    }
+}
+
+<div class="reviews-section mt-5" id="reviews">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-comments"></i> Đánh giá sản phẩm</h4>
+        </div>
+        <div class="card-body">
+            <!-- Summary -->
+            <div class="review-summary mb-4 p-4 bg-light rounded">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center border-end">
+                        <div class="average-rating">
+                            <h1 class="display-3 mb-0">@averageRating.ToString("F1")</h1>
+                            <div class="text-warning mb-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= Math.Round(averageRating))
+                                    {
+                                        <i class="fas fa-star fa-lg"></i>
+                                    }
+                                    else if (i - 0.5 <= averageRating)
+                                    {
+                                        <i class="fas fa-star-half-alt fa-lg"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="far fa-star fa-lg"></i>
+                                    }
+                                }
+                            </div>
+                            <p class="text-muted mb-0">@totalReviews đánh giá</p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <!-- Rating breakdown -->
+                        @for (int star = 5; star >= 1; star--)
+                        {
+                            var count = reviews.Count(r => r.Rating == star);
+                            var percentage = totalReviews > 0 ? (count * 100.0 / totalReviews) : 0;
+                            
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="me-2" style="width: 60px;">@star sao</span>
+                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                         style="width: @percentage%"
+                                         aria-valuenow="@percentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <span class="text-muted" style="width: 60px;">@count (@percentage.ToString("F0")%)</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Write Review Button -->
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                if (canReview)
+                {
+                    <div class="text-center mb-4">
+                        <a href="@Url.Action("Create", "Review", new { productId = Model.ProductId })" 
+                           class="btn btn-primary btn-lg">
+                            <i class="fas fa-edit"></i> Viết đánh giá
+                        </a>
+                    </div>
+                }
+                else if (Model.Reviews?.Any(r => r.UserId == int.Parse(userId)) == true)
+                {
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-check-circle"></i> Bạn đã đánh giá sản phẩm này.
+                        <a href="@Url.Action("MyReviews", "Review")" class="alert-link">Xem đánh giá của bạn</a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-info-circle"></i> 
+                    <a href="@Url.Action("Login", "Account", new { returnUrl = Url.Action("Detail", "Product", new { slug = Model.Slug }) })" 
+                       class="alert-link">Đăng nhập</a> 
+                    để viết đánh giá
+                </div>
+            }
+
+            <hr />
+
+            <!-- Reviews List -->
+            @if (reviews.Count > 0)
+            {
+                <div class="reviews-list">
+                    @foreach (var review in reviews)
+                    {
+                        <div class="review-item mb-4 pb-4 border-bottom">
+                            <div class="d-flex align-items-start">
+                                <!-- Avatar -->
+                                <div class="me-3">
+                                    @if (!string.IsNullOrEmpty(review.User?.Avatar))
+                                    {
+                                        <img src="@review.User.Avatar" alt="@review.User.FullName" 
+                                             class="rounded-circle" width="50" height="50">
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px;">
+                                            <span class="fs-5">@review.User?.FullName?.Substring(0, 1).ToUpper()</span>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Review Content -->
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-0">@review.User?.FullName</h6>
+                                            <small class="text-muted">
+                                                <i class="far fa-calendar"></i> @review.CreatedAt.ToString("dd/MM/yyyy")
+                                            </small>
+                                        </div>
+                                        <!-- Rating -->
+                                        <div class="text-warning">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= review.Rating)
+                                                {
+                                                    <i class="fas fa-star"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="far fa-star"></i>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(review.Comment))
+                                    {
+                                        <p class="mb-0">@review.Comment</p>
+                                    }
+
+                                    @if (review.OrderDetail != null)
+                                    {
+                                        <div class="mt-2">
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i> Đã mua hàng
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+                    @if (canReview)
+                    {
+                        <p>Hãy là người đầu tiên đánh giá!</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

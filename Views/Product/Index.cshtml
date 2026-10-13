@@ -1,0 +1,218 @@
+@model FashionStore.ViewModels.ProductListViewModel
+@{
+    ViewData["Title"] = "Danh sách Sản phẩm";
+}
+
+<nav class="page-crumb" aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cửa hàng</li>
+        @if (Model.OnSale)
+        {
+            <li class="breadcrumb-item active" aria-current="page">Đang giảm giá</li>
+        }
+        @if (!string.IsNullOrEmpty(Model.CategoryName))
+        {
+            <li class="breadcrumb-item active" aria-current="page">@Model.CategoryName</li>
+        }
+        @if (!string.IsNullOrEmpty(Model.BrandName))
+        {
+            <li class="breadcrumb-item active" aria-current="page">@Model.BrandName</li>
+        }
+    </ol>
+</nav>
+
+<div class="page-shell shop-page">
+    <header class="shop-hero">
+        <span class="section-index" data-reveal>Bộ sưu tập</span>
+        <h1 class="page-heading" data-reveal>@(Model.OnSale ? "Đang giảm giá" : "Khám phá sản phẩm")</h1>
+        <p class="shop-lede" data-reveal>
+            @if (!string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <text>Kết quả cho “@Model.SearchQuery” — @Model.TotalItems sản phẩm.</text>
+            }
+            else
+            {
+                <text>@Model.TotalItems sản phẩm đang chờ bạn khám phá.</text>
+            }
+        </p>
+    </header>
+
+    <div class="shop-layout">
+        <aside class="shop-aside">
+            <button class="fs-btn shop-filter-toggle d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#filterSidebar" aria-expanded="false" aria-controls="filterSidebar">
+                Bộ lọc
+            </button>
+
+            <div class="collapse d-lg-block" id="filterSidebar">
+                <form id="filterForm" method="get" action="/Product/Index">
+                    @if (!string.IsNullOrEmpty(Model.SearchQuery))
+                    {
+                        <input type="hidden" name="q" value="@Model.SearchQuery" />
+                    }
+                    <input type="hidden" name="sortBy" id="sortByInput" value="@Model.SortBy" />
+                    @if (Model.OnSale)
+                    {
+                        <input type="hidden" name="onSale" value="true" />
+                    }
+
+                    <div class="filter-sidebar">
+                        <div class="filter-widget">
+                            <h4 class="filter-title">Danh Mục</h4>
+                            <ul class="filter-list">
+                                <li>
+                                    <a href="#" class="filter-link @(Model.CategoryId == null ? "active" : "")" data-name="categoryId" data-value="">Tất cả</a>
+                                </li>
+                                @foreach (var cat in Model.Categories)
+                                {
+                                    <li>
+                                        <a href="#" class="filter-link @(Model.CategoryId == cat.CategoryId ? "active" : "")" data-name="categoryId" data-value="@cat.CategoryId">@cat.CategoryName</a>
+                                    </li>
+                                }
+                            </ul>
+                            <input type="hidden" name="categoryId" id="categoryIdInput" value="@Model.CategoryId" />
+                        </div>
+
+                        <div class="filter-widget">
+                            <h4 class="filter-title">Thương Hiệu</h4>
+                            <ul class="filter-list">
+                                <li>
+                                    <a href="#" class="filter-link @(Model.BrandId == null ? "active" : "")" data-name="brandId" data-value="">Tất cả</a>
+                                </li>
+                                @foreach (var brand in Model.Brands)
+                                {
+                                    <li>
+                                        <a href="#" class="filter-link @(Model.BrandId == brand.BrandId ? "active" : "")" data-name="brandId" data-value="@brand.BrandId">@brand.BrandName</a>
+                                    </li>
+                                }
+                            </ul>
+                            <input type="hidden" name="brandId" id="brandIdInput" value="@Model.BrandId" />
+                        </div>
+
+                        <div class="filter-widget">
+                            <h4 class="filter-title">Giá</h4>
+                            <div class="price-row">
+                                <input type="number" class="form-control" name="minPrice" placeholder="Từ" value="@Model.MinPrice">
+                                <span>—</span>
+                                <input type="number" class="form-control" name="maxPrice" placeholder="Đến" value="@Model.MaxPrice">
+                            </div>
+                            <button type="submit" class="fs-btn shop-apply">Áp dụng giá</button>
+                        </div>
+
+                        <div class="filter-widget">
+                            <h4 class="filter-title">Kích Cỡ</h4>
+                            <div class="size-boxes">
+                                @foreach (var size in Model.Sizes)
+                                {
+                                    <a href="#" class="size-box filter-link @(Model.SizeId == size.SizeId ? "active" : "")" data-name="sizeId" data-value="@size.SizeId">@size.SizeName</a>
+                                }
+                            </div>
+                            <input type="hidden" name="sizeId" id="sizeIdInput" value="@Model.SizeId" />
+                        </div>
+
+                        <div class="filter-widget">
+                            <h4 class="filter-title">Màu Sắc</h4>
+                            <div class="color-swatches">
+                                @foreach (var color in Model.Colors)
+                                {
+                                    <a href="#" class="color-swatch filter-link @(Model.ColorId == color.ColorId ? "active" : "")"
+                                       style="background-color: @color.ColorCode;"
+                                       title="@color.ColorName"
+                                       data-name="colorId" data-value="@color.ColorId"></a>
+                                }
+                            </div>
+                            <input type="hidden" name="colorId" id="colorIdInput" value="@Model.ColorId" />
+                        </div>
+
+                        <a href="/Product" class="filter-reset">Xóa bộ lọc</a>
+                    </div>
+                </form>
+            </div>
+        </aside>
+
+        <div class="shop-main">
+            <div class="shop-toolbar">
+                <p class="shop-count">@Model.Products.Count / @Model.TotalItems</p>
+                <label class="shop-sort">
+                    <span>Sắp xếp</span>
+                    <select class="form-select" id="sortSelect">
+                        <option value="newest" selected="@(Model.SortBy == "newest")">Mới nhất</option>
+                        <option value="price_asc" selected="@(Model.SortBy == "price_asc")">Giá tăng dần</option>
+                        <option value="price_desc" selected="@(Model.SortBy == "price_desc")">Giá giảm dần</option>
+                        <option value="best_selling" selected="@(Model.SortBy == "best_selling")">Xem nhiều nhất</option>
+                        <option value="rating" selected="@(Model.SortBy == "rating")">Đánh giá cao</option>
+                    </select>
+                </label>
+            </div>
+
+            @if (Model.Products.Any())
+            {
+                <div class="shop-grid">
+                    @foreach (var product in Model.Products)
+                    {
+                        @await Html.PartialAsync("_ProductCard", product)
+                    }
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="Page navigation" class="shop-pager">
+                        <ul class="pagination pagination-custom">
+                            <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
+                                <a class="page-link" href="javascript:void(0)" onclick="goToPage(@(Model.CurrentPage - 1))">Trước</a>
+                            </li>
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="javascript:void(0)" onclick="goToPage(@i)">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" href="javascript:void(0)" onclick="goToPage(@(Model.CurrentPage + 1))">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <p class="section-index">Empty</p>
+                    <h2 class="page-heading">Không tìm thấy.</h2>
+                    <p>Thử lại với bộ lọc khác.</p>
+                    <a href="/Product" class="fs-btn">Xem tất cả <span class="arrow">→</span></a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.filter-link').click(function (e) {
+                e.preventDefault();
+                var name = $(this).data('name');
+                var value = $(this).data('value');
+                $('#' + name + 'Input').val(value);
+                $('#filterForm').submit();
+            });
+
+            $('#sortSelect').change(function () {
+                $('#sortByInput').val($(this).val());
+                $('#filterForm').submit();
+            });
+        });
+
+        function goToPage(page) {
+            var form = $('#filterForm');
+            form.find('input[name="page"]').remove();
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'page',
+                value: page
+            }).appendTo(form);
+            form.submit();
+        }
+    </script>
+}

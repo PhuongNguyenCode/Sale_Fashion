@@ -1,0 +1,46 @@
+@model IEnumerable<FashionStore.Models.User>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản Lý Khách Hàng";
+}
+
+<div class="admin-card mb-4">
+    <div class="admin-card-header"><h6 class="admin-card-title">Khách Hàng (@ViewBag.TotalCount)</h6></div>
+    <div class="p-4 border-bottom">
+        <form method="get" class="row g-2">
+            <div class="col-md-6"><div class="input-group">
+                <input class="form-control" name="q" value="@ViewBag.Search" placeholder="Tìm theo tên, email hoặc số điện thoại..." />
+                <button class="btn btn-dark" type="submit" aria-label="Tìm kiếm"><i class="fas fa-search"></i></button>
+            </div></div>
+        </form>
+    </div>
+    <div class="admin-card-body"><div class="table-responsive"><table class="table admin-table mb-0 align-middle">
+        <thead><tr><th>Khách hàng</th><th>Liên hệ</th><th>Ngày tham gia</th><th>Lần đăng nhập</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+        <tbody>
+        @if (Model.Any())
+        {
+            @foreach (var customer in Model)
+            {
+                <tr>
+                    <td><div class="fw-semibold">@customer.FullName</div><div class="text-muted small">#@customer.UserId</div></td>
+                    <td><div>@customer.Email</div><div class="text-muted small">@customer.Phone</div></td>
+                    <td>@customer.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td class="text-muted small">@(customer.LastLoginAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa đăng nhập")</td>
+                    <td><span class="badge @(customer.IsActive ? "bg-success" : "bg-secondary")">@(customer.IsActive ? "Hoạt động" : "Tạm khóa")</span></td>
+                    <td class="text-end"><form asp-action="ToggleStatus" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn @(customer.IsActive ? "tạm khóa" : "kích hoạt") tài khoản này?');">
+                        <input type="hidden" name="id" value="@customer.UserId" />
+                        <button class="btn btn-sm @(customer.IsActive ? "btn-outline-danger" : "btn-outline-success")" type="submit">@(customer.IsActive ? "Tạm khóa" : "Kích hoạt")</button>
+                    </form></td>
+                </tr>
+            }
+        }
+        else { <tr><td colspan="6" class="text-center text-muted py-5">Không tìm thấy khách hàng nào.</td></tr> }
+        </tbody>
+    </table></div></div>
+    @if ((int)ViewBag.TotalPages > 1)
+    {
+        <div class="p-3 border-top"><nav><ul class="pagination mb-0">
+            @for (var i = 1; i <= (int)ViewBag.TotalPages; i++) { <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")"><a class="page-link" href="?page=@i&q=@ViewBag.Search">@i</a></li> }
+        </ul></nav></div>
+    }
+</div>

@@ -1,0 +1,13 @@
+@model IEnumerable<FashionStore.Models.Review>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản Lý Đánh Giá";
+}
+<div class="admin-card mb-4">
+    <div class="admin-card-header"><h6 class="admin-card-title">Đánh Giá (@ViewBag.TotalCount)</h6></div>
+    <div class="p-4 border-bottom"><form method="get" class="row g-2"><div class="col-md-6"><div class="input-group"><input name="q" value="@ViewBag.Search" class="form-control" placeholder="Tìm sản phẩm, khách hàng hoặc nội dung..." /><button class="btn btn-dark" type="submit"><i class="fas fa-search"></i></button></div></div><div class="col-md-3"><select name="status" class="form-select" onchange="this.form.submit()"><option value="">Tất cả trạng thái</option><option value="pending" selected="@(ViewBag.Status == "pending")">Chờ duyệt</option><option value="approved" selected="@(ViewBag.Status == "approved")">Đã duyệt</option></select></div></form></div>
+    <div class="admin-card-body"><div class="table-responsive"><table class="table admin-table mb-0 align-middle"><thead><tr><th>Sản phẩm</th><th>Khách hàng</th><th>Điểm</th><th>Nội dung</th><th>Ngày gửi</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead><tbody>
+    @if (Model.Any()) { foreach (var review in Model) { <tr><td class="fw-semibold">@review.Product?.ProductName</td><td><div>@review.User?.FullName</div><div class="small text-muted">@review.User?.Email</div></td><td class="text-warning">@for (var star = 1; star <= 5; star++) { <i class="fa@(star <= review.Rating ? "s" : "r") fa-star"></i> }</td><td style="min-width:200px">@(string.IsNullOrWhiteSpace(review.Comment) ? "—" : review.Comment)</td><td class="text-muted small">@review.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td><td><span class="badge @(review.IsApproved ? "bg-success" : "bg-warning text-dark")">@(review.IsApproved ? "Đã duyệt" : "Chờ duyệt")</span></td><td class="text-end"><form asp-action="ToggleApproval" method="post" class="d-inline"><input type="hidden" name="id" value="@review.ReviewId" /><button class="btn btn-sm @(review.IsApproved ? "btn-outline-secondary" : "btn-outline-success")" type="submit">@(review.IsApproved ? "Ẩn" : "Duyệt")</button></form></td></tr> } } else { <tr><td colspan="7" class="text-center text-muted py-5">Không có đánh giá phù hợp.</td></tr> }
+    </tbody></table></div></div>
+    @if ((int)ViewBag.TotalPages > 1) { <div class="p-3 border-top"><nav><ul class="pagination mb-0">@for (var currentPage = 1; currentPage <= (int)ViewBag.TotalPages; currentPage++) { <li class="page-item @(currentPage == (int)ViewBag.CurrentPage ? "active" : "")"><a class="page-link" href="?page=@currentPage&status=@ViewBag.Status&q=@ViewBag.Search">@currentPage</a></li> }</ul></nav></div> }
+</div>

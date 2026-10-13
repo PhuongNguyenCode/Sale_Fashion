@@ -1,0 +1,53 @@
+@model FashionStore.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng Nhập";
+}
+
+<div class="auth-split">
+    <figure class="auth-visual" data-clip>
+        <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1400&auto=format&fit=crop" alt="">
+    </figure>
+
+    <div class="auth-card">
+        <p class="section-index">Tài khoản</p>
+        <h1 class="page-heading">Đăng nhập</h1>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        <form asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-4">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control form-control-lg" placeholder="Email" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Password" class="form-label">Mật khẩu</label>
+                <input asp-for="Password" type="password" class="form-control form-control-lg" placeholder="Mật khẩu" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <div class="auth-meta">
+                <div class="form-check">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label text-muted">Nhớ mật khẩu</label>
+                </div>
+            </div>
+
+            <button type="submit" class="fs-btn w-100 mb-4">Đăng nhập <span class="arrow">→</span></button>
+        </form>
+
+        <p class="text-muted">Chưa có tài khoản? <a href="/Account/Register">Đăng ký</a></p>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

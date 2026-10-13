@@ -1,0 +1,17 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Có lỗi xảy ra";
+}
+
+<div class="page-shell">
+    <div class="empty-state">
+        <p class="section-index">Lỗi</p>
+        <h1 class="page-heading">Đã có sự cố xảy ra.</h1>
+        <p>Yêu cầu không xử lý được. Thử lại từ trang chủ.</p>
+        @if (Model.ShowRequestId)
+        {
+            <p class="text-muted">Mã yêu cầu: <code>@Model.RequestId</code></p>
+        }
+        <a href="/" class="fs-btn">Về trang chủ <span class="arrow">→</span></a>
+    </div>
+</div>

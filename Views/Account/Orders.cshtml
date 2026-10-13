@@ -1,0 +1,19 @@
+@model IEnumerable<FashionStore.Models.Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+<div class="page-shell">
+    <p class="section-index">Account</p>
+    <h1 class="page-heading">Đơn hàng của tôi</h1>
+    @if (Model.Any())
+    {
+        <div class="table-responsive"><table class="table">
+            <thead><tr><th>Mã đơn</th><th>Ngày đặt</th><th>Trạng thái</th><th class="text-end">Tổng tiền</th></tr></thead>
+            <tbody>@foreach (var order in Model) { <tr><td>#@order.OrderCode</td><td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td><td>@order.Status</td><td class="text-end">@order.TotalAmount.ToString("N0")đ</td></tr>}</tbody>
+        </table></div>
+    }
+    else
+    {
+        <div class="empty-state"><h2 class="page-heading">Bạn chưa có đơn hàng.</h2><a class="fs-btn" href="/Product">Mua sắm ngay →</a></div>
+    }
+</div>

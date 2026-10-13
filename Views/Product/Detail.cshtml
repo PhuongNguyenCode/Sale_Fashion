@@ -1,0 +1,460 @@
+@model FashionStore.ViewModels.ProductDetailViewModel
+@{
+    ViewData["Title"] = Model.Product.ProductName;
+    var pdpImage = EditorialMedia.Product(Model.Product.ProductId, Model.Product.MainImageUrl);
+    var galleryImages = Model.Images
+        .Select(image => EditorialMedia.Product(Model.Product.ProductId, image.ImageUrl))
+        .Where(url => !string.Equals(url, pdpImage, StringComparison.OrdinalIgnoreCase))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+}
+
+<nav class="page-crumb" aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="/Product">Cửa hàng</a></li>
+        <li class="breadcrumb-item"><a href="/Product?categoryId=@Model.Product.CategoryId">@Model.Product.Category?.CategoryName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Product.ProductName</li>
+    </ol>
+</nav>
+
+<div class="page-shell pdp">
+    <div class="pdp-grid">
+        <div class="product-gallery">
+            <div class="main-image-container">
+                    @if (Model.Product.SalePrice.HasValue)
+                    {
+                        <span class="product-badge sale">−@Model.Product.DiscountPercent%</span>
+                    }
+                    <img id="mainProductImage" src="@pdpImage" alt="@Model.Product.ProductName" onerror="this.onerror=null;this.src='@EditorialMedia.Product(Model.Product.ProductId)';">
+                </div>
+
+                @if (galleryImages.Any())
+                {
+                    <div class="thumbnail-list">
+                        <button type="button" class="thumbnail-item active" onclick="changeImage(this, '@pdpImage')" aria-label="Xem ảnh chính">
+                            <img src="@pdpImage" alt="@Model.Product.ProductName">
+                        </button>
+                        @foreach (var imageUrl in galleryImages)
+                        {
+                            <button type="button" class="thumbnail-item" onclick="changeImage(this, '@imageUrl')" aria-label="Xem ảnh bổ sung">
+                                <img src="@imageUrl" alt="@Model.Product.ProductName" onerror="this.closest('.thumbnail-item').remove()">
+                            </button>
+                        }
+                    </div>
+                }
+        </div>
+
+        <div class="pdp-info">
+            <p class="product-brand">@Model.Product.Brand?.BrandName</p>
+            <h1 class="pdp-title">@Model.Product.ProductName</h1>
+            
+            <div class="d-flex align-items-center mb-4">
+                <div class="product-rating me-3">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Math.Round(Model.AverageRating))
+                        {
+                            <i class="fas fa-star"></i>
+                        }
+                        else
+                        {
+                            <i class="far fa-star"></i>
+                        }
+                    }
+                </div>
+                <a href="#reviews-tab" class="text-muted text-decoration-none" onclick="document.getElementById('reviews-tab').click(); return false;">
+                    (@Model.ReviewCount đánh giá)
+                </a>
+            </div>
+
+            <div class="pdp-price">
+                @if (Model.Product.SalePrice.HasValue)
+                {
+                    <span class="product-price text-accent">@Model.Product.SalePrice.Value.ToString("N0")đ</span>
+                    <span class="product-price-old">@Model.Product.Price.ToString("N0")đ</span>
+                }
+                else
+                {
+                    <span class="product-price">@Model.Product.Price.ToString("N0")đ</span>
+                }
+            </div>
+
+            <p class="pdp-desc">
+                @Model.Product.Description
+            </p>
+
+            <form id="addToCartForm" method="post" action="/Cart/Add">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@Model.Product.ProductId" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                <input type="hidden" id="selectedVariantId" name="variantId" value="" required />
+
+                <!-- Select Color -->
+                <div class="mb-4">
+                    <div class="variant-title d-flex justify-content-between">
+                        <span>MÀU SẮC: <span id="selectedColorName" class="fw-normal text-muted ms-2">Chưa chọn</span></span>
+                    </div>
+                    <div class="variant-options">
+                        @foreach (var color in Model.AvailableColors)
+                        {
+                            <div class="color-swatch variant-color" 
+                                 style="background-color: @color.ColorCode; width: 40px; height: 40px;"
+                                 title="@color.ColorName"
+                                 data-color-id="@color.ColorId"
+                                 data-color-name="@color.ColorName"
+                                 onclick="selectColor(this)">
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Select Size -->
+                <div class="mb-4">
+                    <div class="variant-title d-flex justify-content-between">
+                        <span>KÍCH CỠ: <span id="selectedSizeName" class="fw-normal text-muted ms-2">Chưa chọn</span></span>
+                    </div>
+                    <div class="variant-options">
+                        @foreach (var size in Model.AvailableSizes)
+                        {
+                            <div class="variant-option-btn variant-size" 
+                                 data-size-id="@size.SizeId"
+                                 onclick="selectSize(this)">
+                                @size.SizeName
+                            </div>
+                        }
+                    </div>
+                    <details class="size-guide">
+                        <summary>Hướng dẫn chọn kích cỡ</summary>
+                        <div class="size-guide-content">
+                            <p>Dùng thước dây đo vòng ngực ở phần nở nhất, vòng eo ở phần nhỏ nhất và vòng hông ở phần nở nhất. Giữ thước vừa sát cơ thể, không siết chặt.</p>
+                            <p>Kích cỡ có thể khác nhau giữa các mẫu. Sản phẩm này chưa có bảng số đo chi tiết; hãy kiểm tra dáng áo và mô tả trước khi chọn size.</p>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Stock Status -->
+                <div id="stockStatus" class="mb-4 fw-bold d-none">
+                    <span class="text-success"><i class="fas fa-check-circle me-1"></i> Còn hàng (<span id="stockCount">0</span> sản phẩm)</span>
+                </div>
+
+                <!-- Actions -->
+                <div class="pdp-actions">
+                    <div>
+                        <div class="variant-title">Số lượng</div>
+                        <div class="quantity-selector">
+                            <button type="button" onclick="updateQuantity(-1)"><i class="fas fa-minus"></i></button>
+                            <input type="number" id="quantity" name="quantity" value="1" min="1" max="99" onchange="validateQuantity()" />
+                            <button type="button" onclick="updateQuantity(1)"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <button type="submit" class="fs-btn btn-add-to-cart" id="btnAddToCart" disabled>
+                        Thêm vào giỏ <span class="arrow">→</span>
+                    </button>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <button type="button" class="btn-wishlist-detail" title="@(Model.IsInWishlist ? "Bỏ yêu thích" : "Thêm vào yêu thích")" aria-label="@(Model.IsInWishlist ? "Bỏ yêu thích" : "Thêm vào yêu thích")" onclick="document.getElementById('wishlistForm').submit()">
+                            <i class="@(Model.IsInWishlist ? "fas text-accent" : "far") fa-heart"></i>
+                        </button>
+                    }
+                    else
+                    {
+                        <a class="btn-wishlist-detail" href="/Account/Login?returnUrl=%2FWishlist" title="Đăng nhập để lưu yêu thích" aria-label="Đăng nhập để lưu yêu thích">
+                            <i class="far fa-heart"></i>
+                        </a>
+                    }
+                </div>
+            </form>
+            <form id="wishlistForm" method="post" action="/Wishlist/Toggle" class="d-none">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@Model.Product.ProductId" />
+                <input type="hidden" name="returnUrl" value="/Wishlist" />
+            </form>
+
+            <ul class="pdp-perks">
+                <li>
+                    <strong>Giao hàng toàn quốc</strong>
+                    <span>Miễn phí cho đơn từ 300.000đ</span>
+                </li>
+                <li>
+                    <strong>Đổi trả dễ dàng</strong>
+                    <span>30 ngày với sản phẩm nguyên giá</span>
+                </li>
+                <li>
+                    <strong>Thanh toán an toàn</strong>
+                    <span>COD hoặc chuyển khoản</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="pdp-tabs">
+            <ul class="nav nav-tabs detail-tabs justify-content-center" id="productTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">Chi Tiết Sản Phẩm</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" aria-selected="false">Giao Hàng & Đổi Trả</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">Đánh Giá (@Model.ReviewCount)</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="productTabContent">
+                <div class="tab-pane fade show active detail-tab-content" id="details" role="tabpanel" aria-labelledby="details-tab">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <p>@Model.Product.Description</p>
+                            <p>Sản phẩm mang thương hiệu <strong>@Model.Product.Brand?.BrandName</strong> được thiết kế tỉ mỉ, cẩn thận, đem đến trải nghiệm tốt nhất cho khách hàng. Hãy tự tin diện bộ trang phục này để khẳng định phong cách riêng của bạn.</p>
+                            
+                            <h5 class="mt-4 mb-3">Chất Liệu</h5>
+                            <ul>
+                                <li>Thoáng mát, thấm hút mồ hôi tốt.</li>
+                                <li>Form dáng chuẩn, phù hợp nhiều dáng người.</li>
+                                <li>Bền màu, dễ dàng giặt ủi.</li>
+                            </ul>
+                            
+                            <h5 class="mt-4 mb-3">Hướng Dẫn Bảo Quản</h5>
+                            <ul>
+                                <li>Giặt ở nhiệt độ bình thường, với đồ có màu tương tự.</li>
+                                <li>Không dùng hóa chất tẩy.</li>
+                                <li>Hạn chế sử dụng máy sấy và ủi ở nhiệt độ thích hợp.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade detail-tab-content" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <h5 class="mb-3">Chính Sách Giao Hàng</h5>
+                            <p>Chúng tôi cung cấp dịch vụ giao hàng toàn quốc:</p>
+                            <ul>
+                                <li>Nội thành (Hà Nội, TP.HCM): 1-2 ngày làm việc.</li>
+                                <li>Ngoại thành và các tỉnh thành khác: 3-5 ngày làm việc.</li>
+                                <li>Phí giao hàng đồng giá 30.000đ cho đơn hàng dưới 300.000đ.</li>
+                                <li>Miễn phí giao hàng cho tất cả các đơn hàng từ 300.000đ trở lên.</li>
+                            </ul>
+                            
+                            <h5 class="mt-4 mb-3">Chính Sách Đổi Trả</h5>
+                            <p>Để mang lại trải nghiệm mua sắm tốt nhất, FashionStore hỗ trợ đổi trả sản phẩm trong các trường hợp sau:</p>
+                            <ul>
+                                <li>Sản phẩm còn nguyên tag, chưa qua sử dụng, chưa giặt ủi.</li>
+                                <li>Thời gian đổi trả trong vòng 30 ngày kể từ ngày nhận hàng.</li>
+                                <li>Miễn phí đổi hàng nếu lỗi do nhà sản xuất hoặc giao sai sản phẩm.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade detail-tab-content" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <div class="text-center mb-5">
+                                <h2 class="display-3 fw-bold mb-0">@Model.AverageRating.ToString("0.0")</h2>
+                                <div class="product-rating fs-5 mb-2">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star-half-alt"></i>
+                                </div>
+                                <p class="text-muted">Dựa trên @Model.ReviewCount đánh giá</p>
+                            </div>
+                            
+                            @if (Model.Reviews.Any())
+                            {
+                                @foreach (var review in Model.Reviews)
+                                {
+                                    <div class="review-item mb-4 pb-4 border-bottom">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div class="fw-bold">@review.User?.FullName</div>
+                                            <div class="product-rating text-muted fs-6">
+                                                @for (var star = 1; star <= 5; star++) { <i class="fa@(star <= review.Rating ? "s" : "r") fa-star text-warning"></i> }
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small mb-2">@review.CreatedAt.ToString("dd/MM/yyyy")</div>
+                                        <p>@(string.IsNullOrWhiteSpace(review.Comment) ? "Khách hàng không để lại nội dung." : review.Comment)</p>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-center text-muted py-4">Sản phẩm chưa có đánh giá được duyệt.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    @if (Model.RelatedProducts.Any())
+    {
+        <section class="related-block">
+            <div class="section-head">
+                <div>
+                    <span class="section-index">Next</span>
+                    <h2 class="section-title">Also</h2>
+                </div>
+            </div>
+            <div class="shop-grid">
+                @foreach (var rp in Model.RelatedProducts)
+                {
+                    @await Html.PartialAsync("_ProductCard", rp)
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Variant data from server
+        var variants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.Variants.Select(v => new { 
+                id = v.VariantId, 
+                sizeId = v.SizeId, 
+                colorId = v.ColorId, 
+                stock = v.StockQuantity 
+            })
+        ));
+
+        var selectedColorId = null;
+        var selectedSizeId = null;
+
+        function changeImage(element, url) {
+            $('.thumbnail-item').removeClass('active');
+            $(element).addClass('active');
+            $('#mainProductImage').fadeOut(200, function() {
+                $(this).attr('src', url).fadeIn(200);
+            });
+        }
+
+        function selectColor(element) {
+            $('.variant-color').removeClass('active');
+            $(element).addClass('active');
+            
+            selectedColorId = $(element).data('color-id');
+            $('#selectedColorName').text($(element).data('color-name'));
+            
+            updateVariantAvailability();
+            checkSelection();
+        }
+
+        function selectSize(element) {
+            if ($(element).hasClass('disabled')) return;
+            
+            $('.variant-size').removeClass('active');
+            $(element).addClass('active');
+            
+            selectedSizeId = $(element).data('size-id');
+            $('#selectedSizeName').text($(element).text().trim());
+            
+            updateVariantAvailability();
+            checkSelection();
+        }
+
+        function updateVariantAvailability() {
+            // Disable sizes that are out of stock for selected color
+            if (selectedColorId) {
+                $('.variant-size').each(function() {
+                    var sId = $(this).data('size-id');
+                    var variant = variants.find(v => v.colorId == selectedColorId && v.sizeId == sId);
+                    
+                    if (!variant || variant.stock <= 0) {
+                        $(this).addClass('disabled');
+                        if (selectedSizeId == sId) {
+                            $(this).removeClass('active');
+                            selectedSizeId = null;
+                            $('#selectedSizeName').text('Chưa chọn');
+                        }
+                    } else {
+                        $(this).removeClass('disabled');
+                    }
+                });
+            }
+            
+            // Disable colors that are out of stock for selected size
+            if (selectedSizeId) {
+                $('.variant-color').each(function() {
+                    var cId = $(this).data('color-id');
+                    var variant = variants.find(v => v.sizeId == selectedSizeId && v.colorId == cId);
+                    
+                    if (!variant || variant.stock <= 0) {
+                        $(this).css('opacity', '0.3').css('cursor', 'not-allowed');
+                        $(this).attr('onclick', ''); // Prevent click
+                        if (selectedColorId == cId) {
+                            $(this).removeClass('active');
+                            selectedColorId = null;
+                            $('#selectedColorName').text('Chưa chọn');
+                        }
+                    } else {
+                        $(this).css('opacity', '1').css('cursor', 'pointer');
+                        $(this).attr('onclick', 'selectColor(this)'); // Restore click
+                    }
+                });
+            } else {
+                 $('.variant-color').css('opacity', '1').css('cursor', 'pointer').attr('onclick', 'selectColor(this)');
+            }
+        }
+
+        function checkSelection() {
+            var btnAdd = $('#btnAddToCart');
+            var stockStatus = $('#stockStatus');
+            var stockCount = $('#stockCount');
+            var variantInput = $('#selectedVariantId');
+            
+            if (selectedColorId && selectedSizeId) {
+                var variant = variants.find(v => v.colorId == selectedColorId && v.sizeId == selectedSizeId);
+                
+                if (variant && variant.stock > 0) {
+                    variantInput.val(variant.id);
+                    stockCount.text(variant.stock);
+                    stockStatus.removeClass('d-none');
+                    btnAdd.prop('disabled', false);
+                    
+                    // Update max quantity
+                    var qtyInput = $('#quantity');
+                    qtyInput.attr('max', variant.stock);
+                    if (parseInt(qtyInput.val()) > variant.stock) {
+                        qtyInput.val(variant.stock);
+                    }
+                } else {
+                    variantInput.val('');
+                    stockStatus.addClass('d-none');
+                    btnAdd.prop('disabled', true);
+                }
+            } else {
+                variantInput.val('');
+                stockStatus.addClass('d-none');
+                btnAdd.prop('disabled', true);
+            }
+        }
+
+        function updateQuantity(change) {
+            var input = $('#quantity');
+            var currentVal = parseInt(input.val()) || 1;
+            var max = parseInt(input.attr('max')) || 99;
+            var min = 1;
+            
+            var newVal = currentVal + change;
+            if (newVal >= min && newVal <= max) {
+                input.val(newVal);
+            }
+        }
+
+        function validateQuantity() {
+            var input = $('#quantity');
+            var val = parseInt(input.val());
+            var max = parseInt(input.attr('max')) || 99;
+            var min = 1;
+            
+            if (isNaN(val) || val < min) input.val(min);
+            if (val > max) input.val(max);
+        }
+    </script>
+}
+
+
+<!-- Reviews Section -->
+<div class="container">
+    <partial name="_ProductReviews" model="Model.Product" />
+</div>

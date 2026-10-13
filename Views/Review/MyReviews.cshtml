@@ -1,0 +1,156 @@
+@model List<FashionStore.Models.Review>
+@{
+    ViewData["Title"] = "Đánh giá của tôi";
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var totalCount = ViewBag.TotalCount as int? ?? 0;
+}
+
+<div class="container my-5">
+    <h2 class="mb-4"><i class="fas fa-star"></i> Đánh giá của tôi</h2>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Bạn chưa có đánh giá nào.
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">Tổng số: @totalCount đánh giá</p>
+
+        @foreach (var review in Model)
+        {
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Hình sản phẩm -->
+                        <div class="col-md-2">
+                            @if (review.Product != null)
+                            {
+                                <img src="@review.Product.MainImageUrl" alt="@review.Product.ProductName" 
+                                     class="img-fluid rounded">
+                            }
+                        </div>
+
+                        <!-- Nội dung đánh giá -->
+                        <div class="col-md-10">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="mb-1">
+                                        @if (review.Product != null)
+                                        {
+                                            <a href="@Url.Action("Detail", "Product", new { slug = review.Product.Slug })" 
+                                               class="text-decoration-none">
+                                                @review.Product.ProductName
+                                            </a>
+                                        }
+                                    </h5>
+                                    
+                                    <!-- Rating Stars -->
+                                    <div class="text-warning mb-2">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= review.Rating)
+                                            {
+                                                <i class="fas fa-star"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="far fa-star"></i>
+                                            }
+                                        }
+                                        <span class="text-muted ms-2">(@review.Rating sao)</span>
+                                    </div>
+                                </div>
+
+                                <!-- Status Badge -->
+                                <div>
+                                    @if (review.IsApproved)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Đã duyệt
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-clock"></i> Chờ duyệt
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Comment -->
+                            @if (!string.IsNullOrEmpty(review.Comment))
+                            {
+                                <p class="mb-2">@review.Comment</p>
+                            }
+
+                            <!-- Date and Actions -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="far fa-calendar"></i> @review.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+
+                                <div>
+                                    @if (review.Product != null)
+                                    {
+                                        <a href="@Url.Action("Detail", "Product", new { slug = review.Product.Slug })" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Xem sản phẩm
+                                        </a>
+                                    }
+                                    
+                                    <form asp-action="Delete" asp-route-id="@review.ReviewId" method="post" 
+                                          class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <!-- Previous -->
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("MyReviews", new { page = currentPage - 1 })">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    <!-- Page numbers -->
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("MyReviews", new { page = i })">@i</a>
+                        </li>
+                    }
+
+                    <!-- Next -->
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("MyReviews", new { page = currentPage + 1 })">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+
+    <div class="text-center mt-4">
+        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary">
+            <i class="fas fa-home"></i> Về trang chủ
+        </a>
+    </div>
+</div>

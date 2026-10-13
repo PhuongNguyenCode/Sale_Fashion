@@ -1,0 +1,46 @@
+@model FashionStore.ViewModels.AdminDashboardViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <p class="text-muted mb-0">Tổng quan vận hành · @DateTime.Now.ToString("dd/MM/yyyy")</p>
+    <div><a asp-area="Admin" asp-controller="Orders" asp-action="Index" asp-route-status="Pending" class="btn btn-outline-dark btn-sm">Đơn chờ xử lý</a> <a asp-area="Admin" asp-controller="Products" asp-action="Create" class="btn btn-primary-custom btn-sm"><i class="fas fa-plus me-1"></i>Thêm sản phẩm</a></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6"><div class="kpi-card"><div class="kpi-icon red"><i class="fas fa-wallet"></i></div><div class="kpi-value">@Model.MonthRevenue.ToString("N0")đ</div><div class="kpi-label">Doanh thu tháng này</div><div class="small mt-2 @(Model.RevenueChangePercent >= 0 ? "text-success" : "text-danger")"><i class="fas @(Model.RevenueChangePercent >= 0 ? "fa-arrow-up" : "fa-arrow-down") me-1"></i>@Math.Abs(Model.RevenueChangePercent).ToString("N1")% so với tháng trước</div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="kpi-card"><div class="kpi-icon blue"><i class="fas fa-shopping-bag"></i></div><div class="kpi-value">@Model.MonthOrders</div><div class="kpi-label">Đơn hàng trong tháng</div><div class="small text-muted mt-2">Tổng cộng @Model.TotalOrders đơn</div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="kpi-card"><div class="kpi-icon green"><i class="fas fa-box"></i></div><div class="kpi-value">@Model.TotalProducts</div><div class="kpi-label">Sản phẩm đang bán</div><div class="small @(Model.LowStockProducts > 0 ? "text-danger" : "text-muted") mt-2">@Model.LowStockProducts sản phẩm sắp hết hàng</div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="kpi-card"><div class="kpi-icon orange"><i class="fas fa-users"></i></div><div class="kpi-value">@Model.TotalCustomers</div><div class="kpi-label">Khách hàng</div><div class="small text-muted mt-2">Đã giao: @Model.TotalRevenue.ToString("N0")đ</div></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3"><a class="text-decoration-none" asp-area="Admin" asp-controller="Orders" asp-action="Index" asp-route-status="Pending"><div class="kpi-card text-center p-4"><div class="fs-2 fw-bold text-warning">@Model.PendingOrders</div><div class="text-muted">Chờ xác nhận</div></div></a></div>
+    <div class="col-md-3"><a class="text-decoration-none" asp-area="Admin" asp-controller="Orders" asp-action="Index" asp-route-status="Processing"><div class="kpi-card text-center p-4"><div class="fs-2 fw-bold text-primary">@Model.ProcessingOrders</div><div class="text-muted">Đang xử lý</div></div></a></div>
+    <div class="col-md-3"><a class="text-decoration-none" asp-area="Admin" asp-controller="Orders" asp-action="Index" asp-route-status="Shipping"><div class="kpi-card text-center p-4"><div class="fs-2 fw-bold text-info">@Model.ShippingOrders</div><div class="text-muted">Đang giao</div></div></a></div>
+    <div class="col-md-3"><div class="kpi-card text-center p-4"><div class="fs-2 fw-bold @(Model.PendingReviews > 0 ? "text-danger" : "text-success")">@Model.PendingReviews</div><div class="text-muted">Đánh giá chờ duyệt</div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8"><div class="admin-card h-100"><div class="admin-card-header"><h6 class="admin-card-title">Doanh Thu Đơn Đã Giao · 7 Ngày</h6></div><div class="admin-card-body p-4"><canvas id="revenueChart" height="105"></canvas></div></div></div>
+    <div class="col-xl-4"><div class="admin-card h-100"><div class="admin-card-header"><h6 class="admin-card-title">Sản Phẩm Bán Chạy</h6></div><div class="admin-card-body">
+        @if (Model.TopProducts.Any()) { var rank = 1; foreach (var product in Model.TopProducts) { <div class="d-flex align-items-center justify-content-between p-3 border-bottom"><div class="d-flex align-items-center"><div class="fw-bold text-muted me-3" style="width:20px;">@rank</div><div><div class="fw-semibold small">@product.ProductName</div><div class="text-muted" style="font-size:12px;">@product.TotalSold sản phẩm đã bán</div></div></div><div class="fw-bold text-success small">@product.Revenue.ToString("N0")đ</div></div>; rank++; } } else { <div class="p-4 text-center text-muted">Chưa có đơn đã giao.</div> }
+    </div></div></div>
+
+    <div class="col-lg-5"><div class="admin-card"><div class="admin-card-header"><h6 class="admin-card-title">Cảnh Báo Tồn Kho</h6><a asp-area="Admin" asp-controller="Products" asp-action="Index" class="btn btn-sm btn-outline-secondary">Sản phẩm</a></div><div class="admin-card-body">
+        @if (Model.LowStockItems.Any()) { foreach (var product in Model.LowStockItems) { <div class="d-flex justify-content-between align-items-center p-3 border-bottom"><a asp-area="Admin" asp-controller="Products" asp-action="Edit" asp-route-id="@product.ProductId" class="text-decoration-none text-dark fw-semibold small">@product.ProductName</a><span class="badge @(product.StockQuantity == 0 ? "bg-danger" : "bg-warning text-dark")">@product.StockQuantity tồn</span></div> } } else { <div class="p-4 text-center text-success"><i class="fas fa-check-circle me-1"></i>Tồn kho đang ổn định.</div> }
+    </div></div></div>
+    <div class="col-lg-7"><div class="admin-card"><div class="admin-card-header"><h6 class="admin-card-title">Đơn Hàng Gần Đây</h6><a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-outline-secondary">Xem tất cả</a></div><div class="admin-card-body"><div class="table-responsive"><table class="table admin-table mb-0"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+        @if (Model.RecentOrders.Any()) { foreach (var order in Model.RecentOrders) { <tr><td><div class="fw-bold">#@order.OrderCode</div><div class="text-muted small">@order.OrderDate.ToString("dd/MM HH:mm")</div></td><td><div class="fw-semibold">@order.FullName</div><div class="text-muted small">@order.Phone</div></td><td class="fw-bold">@order.TotalAmount.ToString("N0")đ</td><td><span class="badge badge-@order.Status.ToLower()">@(order.Status switch { FashionStore.Models.OrderStatus.Pending => "Chờ xử lý", FashionStore.Models.OrderStatus.Confirmed => "Đã xác nhận", FashionStore.Models.OrderStatus.Processing => "Đang xử lý", FashionStore.Models.OrderStatus.Shipping => "Đang giao", FashionStore.Models.OrderStatus.Delivered => "Đã giao", _ => "Đã hủy" })</span></td><td><a asp-area="Admin" asp-controller="Orders" asp-action="Detail" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">Chi tiết</a></td></tr> } } else { <tr><td colspan="5" class="text-center text-muted py-4">Chưa có đơn hàng.</td></tr> }
+    </tbody></table></div></div></div></div>
+</div>
+
+@section Scripts {
+<script>
+    const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartLabels));
+    const data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartData));
+    new Chart(document.getElementById('revenueChart'), { type: 'line', data: { labels, datasets: [{ data, fill: true, backgroundColor: 'rgba(233,69,96,.08)', borderColor: '#e94560', borderWidth: 2.5, tension: .4, pointBackgroundColor: '#e94560', pointRadius: 4 }] }, options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => context.parsed.y.toLocaleString('vi-VN') + 'đ' } } }, scales: { y: { beginAtZero: true, ticks: { callback: value => value.toLocaleString('vi-VN') + 'đ' }, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } } });
+</script>
+}

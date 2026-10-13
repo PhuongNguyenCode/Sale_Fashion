@@ -1,0 +1,60 @@
+@model FashionStore.ViewModels.ProductCardViewModel
+@{
+    var imageUrl = EditorialMedia.Product(Model.ProductId, Model.MainImageUrl);
+}
+
+<article class="product-card" data-cursor="View">
+    <div class="card-img-wrapper" data-clip>
+        @if (Model.DiscountPercent.HasValue)
+        {
+            <span class="product-badge sale">−@Model.DiscountPercent%</span>
+        }
+        else if (Model.ProductId % 3 == 0)
+        {
+            <span class="product-badge">New</span>
+        }
+
+        <a href="/products/@Model.Slug">
+            <img src="@imageUrl" class="card-img-top" alt="@Model.ProductName" loading="lazy" onerror="this.onerror=null;this.src='@EditorialMedia.Product(Model.ProductId)';">
+        </a>
+
+        <div class="card-actions">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form method="post" action="/Wishlist/Toggle" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.ProductId" />
+                    <input type="hidden" name="returnUrl" value="/Wishlist" />
+                    <button class="btn-action" type="submit" title="@(Model.IsInWishlist ? "Bỏ yêu thích" : "Thêm vào yêu thích")" aria-label="@(Model.IsInWishlist ? "Bỏ yêu thích" : "Thêm vào yêu thích")">
+                        <i class="@(Model.IsInWishlist ? "fas text-accent" : "far") fa-heart"></i>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a class="btn-action" href="/Account/Login?returnUrl=%2FWishlist" title="Đăng nhập để lưu yêu thích" aria-label="Đăng nhập để lưu yêu thích">
+                    <i class="far fa-heart"></i>
+                </a>
+            }
+            <a class="btn-action" href="/products/@Model.Slug" title="Xem sản phẩm">
+                <i class="far fa-eye"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="product-brand">@Model.BrandName</div>
+        <a href="/products/@Model.Slug" class="product-title">@Model.ProductName</a>
+        <div class="product-price-container">
+            @if (Model.SalePrice.HasValue)
+            {
+                <span class="product-price text-accent">@Model.SalePrice.Value.ToString("N0")đ</span>
+                <span class="product-price-old">@Model.Price.ToString("N0")đ</span>
+            }
+            else
+            {
+                <span class="product-price">@Model.Price.ToString("N0")đ</span>
+            }
+        </div>
+    </div>
+</article>

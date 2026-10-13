@@ -1,0 +1,177 @@
+@model List<FashionStore.Models.Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var totalCount = ViewBag.TotalCount as int? ?? 0;
+    var filterStatus = ViewBag.Status as string;
+}
+
+<div class="container my-5">
+    <h2 class="mb-4"><i class="fas fa-shopping-bag"></i> Đơn hàng của tôi</h2>
+
+    <!-- Filter tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link @(string.IsNullOrEmpty(filterStatus) ? "active" : "")" 
+               href="@Url.Action("Index")">
+                Tất cả (@totalCount)
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(filterStatus == "Pending" ? "active" : "")" 
+               href="@Url.Action("Index", new { status = "Pending" })">
+                Chờ xử lý
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(filterStatus == "Confirmed" ? "active" : "")" 
+               href="@Url.Action("Index", new { status = "Confirmed" })">
+                Đã xác nhận
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(filterStatus == "Shipping" ? "active" : "")" 
+               href="@Url.Action("Index", new { status = "Shipping" })">
+                Đang giao
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(filterStatus == "Delivered" ? "active" : "")" 
+               href="@Url.Action("Index", new { status = "Delivered" })">
+                Đã giao
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(filterStatus == "Cancelled" ? "active" : "")" 
+               href="@Url.Action("Index", new { status = "Cancelled" })">
+                Đã hủy
+            </a>
+        </li>
+    </ul>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> Bạn chưa có đơn hàng nào.
+        </div>
+    }
+    else
+    {
+        @foreach (var order in Model)
+        {
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Mã đơn: </strong>
+                        <a href="@Url.Action("Detail", new { orderCode = order.OrderCode })" class="text-decoration-none">
+                            #@order.OrderCode
+                        </a>
+                    </div>
+                    <div>
+                        @if (order.Status == "Pending")
+                        {
+                            <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                        }
+                        else if (order.Status == "Confirmed")
+                        {
+                            <span class="badge bg-info">Đã xác nhận</span>
+                        }
+                        else if (order.Status == "Shipping")
+                        {
+                            <span class="badge bg-primary">Đang giao</span>
+                        }
+                        else if (order.Status == "Delivered")
+                        {
+                            <span class="badge bg-success">Đã giao</span>
+                        }
+                        else if (order.Status == "Cancelled")
+                        {
+                            <span class="badge bg-danger">Đã hủy</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <small class="text-muted">
+                                <i class="far fa-calendar"></i> @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                            </small>
+                            
+                            <!-- Products preview -->
+                            <div class="mt-2">
+                                @foreach (var detail in order.OrderDetails.Take(2))
+                                {
+                                    if (detail.Variant?.Product != null)
+                                    {
+                                        <div class="d-flex align-items-center mb-2">
+                                            <img src="@detail.Variant.Product.MainImageUrl" 
+                                                 alt="@detail.ProductName" 
+                                                 class="rounded me-2" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                            <div>
+                                                <small>@detail.ProductName</small>
+                                                <br>
+                                                <small class="text-muted">x@detail.Quantity</small>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                @if (order.OrderDetails.Count > 2)
+                                {
+                                    <small class="text-muted">và @(order.OrderDetails.Count - 2) sản phẩm khác...</small>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <p class="mb-1">
+                                <strong>Tổng tiền:</strong>
+                                <span class="text-danger fs-5">@order.TotalAmount.ToString("N0") đ</span>
+                            </p>
+                            <p class="mb-2">
+                                <small class="text-muted">
+                                    Thanh toán: @order.PaymentMethod
+                                    @if (order.Payment != null)
+                                    {
+                                        <span class="badge bg-secondary">@order.Payment.Status</span>
+                                    }
+                                </small>
+                            </p>
+                            <a href="@Url.Action("Detail", new { orderCode = order.OrderCode })" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { status = filterStatus, page = currentPage - 1 })">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { status = filterStatus, page = i })">@i</a>
+                        </li>
+                    }
+
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { status = filterStatus, page = currentPage + 1 })">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+</div>

@@ -1,0 +1,303 @@
+@model FashionStore.ViewModels.CheckoutViewModel
+@{
+    ViewData["Title"] = "Thanh Toán";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/checkout.css" asp-append-version="true" />
+}
+
+<!-- Progress indicator -->
+<div class="checkout-progress">
+    <div class="progress-steps">
+        <div class="progress-step completed">
+            <div class="step-circle">1</div>
+            <span class="step-label">Giỏ hàng</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step active">
+            <div class="step-circle">2</div>
+            <span class="step-label">Thanh toán</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+            <div class="step-circle">3</div>
+            <span class="step-label">Hoàn tất</span>
+        </div>
+    </div>
+</div>
+
+<nav class="page-crumb" aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="/Cart">Giỏ hàng</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Thanh toán</li>
+    </ol>
+</nav>
+
+<div class="page-shell checkout-page">
+    <p class="section-index" data-reveal>Thanh toán</p>
+    <h1 class="page-heading" data-reveal>Đặt hàng</h1>
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mb-4">@TempData["Error"]</div>
+    }
+
+    <form method="post" action="/Checkout/PlaceOrder" id="checkoutForm">
+        @Html.AntiForgeryToken()
+        <div class="checkout-layout">
+            <div class="checkout-form">
+                <h2 class="checkout-block-title">Thông tin giao hàng</h2>
+
+                <div class="checkout-fields">
+                    <label>
+                        Họ và Tên *
+                        <input type="text" asp-for="FullName" class="form-control" placeholder="Nhập họ và tên" required>
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </label>
+                    <label>
+                        Email *
+                        <input type="email" asp-for="Email" class="form-control" placeholder="email@example.com" required>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </label>
+                    <label>
+                        Số điện thoại *
+                        <input type="tel" asp-for="Phone" class="form-control" placeholder="0912345678" required pattern="[0-9]{10,11}">
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </label>
+                    <label>
+                        Tỉnh / Thành phố *
+                        <select asp-for="City" class="form-select" required>
+                            <option value="">Chọn tỉnh / thành phố</option>
+                            <option value="Hà Nội">Hà Nội</option>
+                            <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                            <option value="Đà Nẵng">Đà Nẵng</option>
+                            <option value="Hải Phòng">Hải Phòng</option>
+                            <option value="Cần Thơ">Cần Thơ</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                        <span asp-validation-for="City" class="text-danger small"></span>
+                    </label>
+                    <label class="span-2">
+                        Địa chỉ cụ thể *
+                        <input type="text" asp-for="Address" class="form-control" placeholder="Số nhà, tên đường, phường/xã" required>
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </label>
+                    <label class="span-2">
+                        Ghi chú đơn hàng
+                        <textarea asp-for="Note" class="form-control" rows="3" placeholder="Ghi chú cho người giao hàng (không bắt buộc)"></textarea>
+                    </label>
+                </div>
+
+                <h2 class="checkout-block-title">Phương thức thanh toán</h2>
+                <div class="payment-methods">
+                    <!-- COD Payment -->
+                    <label class="payment-method-card" data-method="COD">
+                        <input type="radio" asp-for="PaymentMethod" id="paymentCOD" value="COD" checked>
+                        <div class="payment-card-content">
+                            <div class="payment-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="payment-info">
+                                <strong class="payment-name">Thanh toán khi nhận hàng (COD)</strong>
+                                <span class="payment-desc">Thanh toán bằng tiền mặt khi nhận hàng</span>
+                            </div>
+                            <div class="payment-check">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Bank Transfer (Casso Auto) -->
+                    <label class="payment-method-card" data-method="Casso">
+                        <input type="radio" asp-for="PaymentMethod" id="paymentCasso" value="Casso">
+                        <div class="payment-card-content">
+                            <div class="payment-icon">
+                                <i class="fas fa-university"></i>
+                            </div>
+                            <div class="payment-info">
+                                <strong class="payment-name">Chuyển khoản ngân hàng</strong>
+                                <span class="payment-desc">Quét mã QR, tự động xác nhận thanh toán</span>
+                            </div>
+                            <div class="payment-check">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- VNPay Payment -->
+                    <label class="payment-method-card" data-method="VNPay">
+                        <input type="radio" asp-for="PaymentMethod" id="paymentVNPay" value="VNPay">
+                        <div class="payment-card-content">
+                            <div class="payment-icon payment-icon-vnpay">
+                                <img src="~/images/payment/vnpay-logo.png" alt="VNPay" onerror="this.parentElement.innerHTML='<i class=\'fas fa-credit-card\'></i>'">
+                            </div>
+                            <div class="payment-info">
+                                <strong class="payment-name">VNPay</strong>
+                                <span class="payment-desc">Thanh toán qua cổng VNPay (ATM/Visa/MasterCard/QR)</span>
+                            </div>
+                            <div class="payment-check">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <aside class="cart-summary">
+                <!-- Mobile order summary toggle -->
+                <div class="order-summary-toggle" id="orderSummaryToggle">
+                    <div class="toggle-header">
+                        <span>Đơn hàng của bạn</span>
+                        <span class="toggle-total">@Model.Cart.Total.ToString("N0")đ</span>
+                    </div>
+                    <button type="button" class="toggle-btn">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+
+                <div class="order-summary-content" id="orderSummaryContent">
+                    <h2>Đơn hàng của bạn</h2>
+                    <div class="order-items">
+                        @foreach (var item in Model.Cart.Items)
+                        {
+                            <div class="order-line">
+                                <img src="@EditorialMedia.Product(item.ProductId, item.ProductImageUrl)" alt="@item.ProductName" onerror="this.onerror=null;this.src='@EditorialMedia.Product(item.ProductId)';">
+                                <div>
+                                    <p>@item.ProductName</p>
+                                    <span>@item.ColorName · @item.SizeName · ×@item.Quantity</span>
+                                </div>
+                                <strong>@item.SubTotal.ToString("N0")đ</strong>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Tạm tính</span>
+                        <span>@Model.Cart.SubTotal.ToString("N0")đ</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Cart.CouponCode))
+                    {
+                        <div class="summary-row text-accent">
+                            <span>Giảm giá (@Model.Cart.CouponCode)</span>
+                            <span>-@Model.Cart.DiscountAmount.ToString("N0")đ</span>
+                        </div>
+                    }
+                    <div class="summary-row">
+                        <span>Phí vận chuyển</span>
+                        <span>@(Model.Cart.ShippingFee == 0 ? "Miễn phí" : Model.Cart.ShippingFee.ToString("N0") + "đ")</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Tổng</span>
+                        <span>@Model.Cart.Total.ToString("N0")đ</span>
+                    </div>
+                    <button type="submit" class="fs-btn w-100" id="submitBtn">
+                        <span class="btn-text">Đặt hàng</span>
+                        <span class="btn-loading" style="display:none;">
+                            <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+                        </span>
+                    </button>
+                </div>
+            </aside>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Checkout page interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('checkoutForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoading = submitBtn.querySelector('.btn-loading');
+            
+            // Payment method selection with animations
+            const paymentCards = document.querySelectorAll('.payment-method-card');
+            paymentCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    paymentCards.forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+                
+                // Add hover effect
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Set initial selected state
+            const checkedInput = document.querySelector('input[name="PaymentMethod"]:checked');
+            if (checkedInput) {
+                checkedInput.closest('.payment-method-card').classList.add('selected');
+            }
+            
+            // Mobile order summary toggle
+            const summaryToggle = document.getElementById('orderSummaryToggle');
+            const summaryContent = document.getElementById('orderSummaryContent');
+            
+            if (summaryToggle) {
+                summaryToggle.addEventListener('click', function() {
+                    this.classList.toggle('open');
+                    if (summaryContent.style.maxHeight) {
+                        summaryContent.style.maxHeight = null;
+                    } else {
+                        summaryContent.style.maxHeight = summaryContent.scrollHeight + 'px';
+                    }
+                });
+            }
+            
+            // Form submission with loading state
+            form.addEventListener('submit', function(e) {
+                if (!form.checkValidity()) {
+                    return;
+                }
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline-flex';
+                submitBtn.style.opacity = '0.7';
+                
+                // Add form animation
+                document.querySelector('.checkout-layout').style.opacity = '0.6';
+                document.querySelector('.checkout-layout').style.pointerEvents = 'none';
+            });
+            
+            // Smooth scroll to validation errors
+            form.addEventListener('invalid', function(e) {
+                e.preventDefault();
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, true);
+            
+            // Add entrance animations
+            const checkoutFields = document.querySelectorAll('.checkout-fields label');
+            checkoutFields.forEach((field, index) => {
+                field.style.opacity = '0';
+                field.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    field.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    field.style.opacity = '1';
+                    field.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+            
+            paymentCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 * (checkoutFields.length + index));
+            });
+        });
+    </script>
+}

@@ -1,0 +1,210 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — FashionStore</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.css">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/animations.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/responsive.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var area = ViewContext.RouteData.Values["area"]?.ToString();
+    var isHome = string.IsNullOrEmpty(area) && controller == "Home" && action == "Index";
+}
+<body class="@(isHome ? "page-home" : "page-inner")" data-page="@(isHome ? "home" : "inner")">
+    <a class="skip-link" href="#main-content">Bỏ qua nội dung</a>
+
+    <div class="cursor" aria-hidden="true">
+        <span class="cursor-dot"></span>
+        <span class="cursor-label"></span>
+    </div>
+
+    <header class="site-header" id="siteHeader">
+        <nav class="site-nav" aria-label="Điều hướng chính">
+            <a class="nav-logo" asp-area="" asp-controller="Home" asp-action="Index">FashionStore</a>
+
+            <ul class="nav-menu" id="desktopMenu">
+                <li><a class="nav-link-item" asp-area="" asp-controller="Product" asp-action="Index">Cửa hàng</a></li>
+                <li><a class="nav-link-item" href="/#lookbook">Bộ sưu tập</a></li>
+                <li><a class="nav-link-item" href="/#sale">Khuyến mãi</a></li>
+                <li><a class="nav-link-item" href="/Home/Privacy">Về chúng tôi</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button type="button" class="nav-action" id="searchToggle" aria-label="Tìm kiếm" data-cursor="→">
+                    <span class="nav-action-label">Tìm kiếm</span>
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                </button>
+                <a href="/Wishlist" class="nav-action" title="Yêu thích" aria-label="Yêu thích">
+                    <span class="nav-action-label">Yêu thích</span>
+                    <i class="far fa-heart" aria-hidden="true"></i>
+                </a>
+                <a asp-area="" asp-controller="Cart" asp-action="Index" class="nav-action nav-bag" title="Giỏ hàng" aria-label="Giỏ hàng" data-cursor="→">
+                    <span class="nav-action-label">Giỏ hàng</span>
+                    <i class="fas fa-bag-shopping" aria-hidden="true"></i>
+                    <span class="nav-badge">0</span>
+                </a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="dropdown nav-account">
+                        <a href="#" class="nav-action dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Tài khoản">
+                            <span class="nav-action-label">Tài khoản</span>
+                            <i class="far fa-user" aria-hidden="true"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end fs-dropdown" aria-labelledby="userDropdown">
+                            <li><span class="dropdown-item-text">Tài khoản</span></li>
+                            <li><a class="dropdown-item" href="/Account/Orders">Đơn hàng</a></li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/Admin/Dashboard">Quản trị hệ thống</a></li>
+                            }
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form id="logout-form" action="/Account/Logout" method="post" class="d-none">
+                                    @Html.AntiForgeryToken()
+                                </form>
+                                <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Đăng xuất</a>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="nav-action" title="Đăng nhập" aria-label="Đăng nhập">
+                        <span class="nav-action-label">Tài khoản</span>
+                        <i class="far fa-user" aria-hidden="true"></i>
+                    </a>
+                }
+                <button type="button" class="nav-hamburger" id="menuToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="mobileMenu">
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu" hidden>
+        <div class="mobile-menu-inner">
+            <a asp-area="" asp-controller="Product" asp-action="Index">Cửa hàng</a>
+            <a href="/#lookbook">Bộ sưu tập</a>
+            <a href="/#sale">Khuyến mãi</a>
+            <a href="/Home/Privacy">Về chúng tôi</a>
+            <a href="/Account/Login">Tài khoản</a>
+            <a asp-area="" asp-controller="Cart" asp-action="Index">Giỏ hàng</a>
+        </div>
+    </div>
+
+    <div class="search-overlay" id="searchOverlay" hidden>
+        <button type="button" class="search-close" id="searchClose" aria-label="Đóng tìm kiếm">Đóng</button>
+        <form class="search-form" method="get" action="/Product/Index" role="search">
+            <label class="visually-hidden" for="siteSearch">Tìm sản phẩm</label>
+            <input type="search" id="siteSearch" name="q" placeholder="Tìm kiếm sản phẩm…" autocomplete="off" />
+            <button type="submit" class="fs-btn">Tìm kiếm →</button>
+        </form>
+    </div>
+
+    <main id="main-content" role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer" aria-label="Thông tin cửa hàng">
+        <div class="footer-intro">
+            <p class="footer-kicker">FashionStore / Kết nối</p>
+            <p class="footer-statement" data-reveal>Giữ kết nối.<br>Giữ phong cách.</p>
+            <p class="footer-intro-copy">Theo dõi chúng tôi để xem bộ sưu tập mới, cách phối đồ và những ưu đãi dành riêng cho bạn.</p>
+        </div>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a class="nav-logo" asp-area="" asp-controller="Home" asp-action="Index">FashionStore</a>
+                <p class="footer-copy">Thời trang được chọn lọc, dành cho bạn.</p>
+            </div>
+            <div>
+                <p class="footer-label">Mua sắm</p>
+                <ul class="footer-links">
+                    <li><a asp-area="" asp-controller="Product" asp-action="Index">Bộ sưu tập</a></li>
+                    <li><a href="/#sale">Khuyến mãi</a></li>
+                    <li><a href="/Home/Privacy">Về chúng tôi</a></li>
+                </ul>
+            </div>
+            <div>
+                <p class="footer-label">Hỗ trợ</p>
+                <ul class="footer-links">
+                    <li><a href="/Account/Orders">Đơn hàng của tôi</a></li>
+                    <li><a asp-area="" asp-controller="Cart" asp-action="Index">Giỏ hàng</a></li>
+                    <li><a href="/Account/Login">Tài khoản</a></li>
+                </ul>
+            </div>
+            <div>
+                <p class="footer-label">Liên hệ & theo dõi</p>
+                <ul class="footer-socials">
+                    @{
+                        var socialChannels = new[]
+                        {
+                            new { Name = "Facebook", Icon = "fa-facebook-f", Url = Configuration["SocialLinks:Facebook"] },
+                            new { Name = "TikTok", Icon = "fa-tiktok", Url = Configuration["SocialLinks:TikTok"] },
+                            new { Name = "Instagram", Icon = "fa-instagram", Url = Configuration["SocialLinks:Instagram"] },
+                            new { Name = "Zalo", Icon = "", Url = Configuration["SocialLinks:Zalo"] }
+                        };
+                    }
+                    @foreach (var channel in socialChannels)
+                    {
+                        var hasLink = Uri.TryCreate(channel.Url, UriKind.Absolute, out var socialUri) && socialUri.Scheme == Uri.UriSchemeHttps;
+                        <li>
+                            @if (hasLink)
+                            {
+                                <a class="footer-social" href="@channel.Url" target="_blank" rel="noopener noreferrer" aria-label="FashionStore trên @channel.Name">
+                                    <span class="footer-social-icon" aria-hidden="true">
+                                        @if (channel.Name == "Zalo") { <span class="footer-zalo-mark">Z</span> }
+                                        else { <i class="fa-brands @channel.Icon"></i> }
+                                    </span>
+                                    <span>@channel.Name</span>
+                                    <span class="footer-social-arrow" aria-hidden="true">↗</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="footer-social footer-social-pending" aria-label="@channel.Name — liên kết đang cập nhật">
+                                    <span class="footer-social-icon" aria-hidden="true">
+                                        @if (channel.Name == "Zalo") { <span class="footer-zalo-mark">Z</span> }
+                                        else { <i class="fa-brands @channel.Icon"></i> }
+                                    </span>
+                                    <span>@channel.Name</span>
+                                </span>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 FashionStore</span>
+            <span>Phong cách của bạn, câu chuyện của chúng tôi.</span>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script src="~/js/navigation.js" asp-append-version="true"></script>
+    <script src="~/js/animations.js" asp-append-version="true"></script>
+    <script src="~/js/main.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,123 @@
+@model IEnumerable<FashionStore.Models.Product>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản Lý Sản Phẩm";
+}
+
+<div class="admin-card mb-4">
+    <div class="admin-card-header">
+        <h6 class="admin-card-title">Danh Sách Sản Phẩm</h6>
+        <a asp-area="Admin" asp-controller="Products" asp-action="Create" class="btn btn-primary-custom btn-sm">
+            <i class="fas fa-plus me-1"></i> Thêm Mới
+        </a>
+    </div>
+    <div class="p-4 border-bottom">
+        <form method="get" class="row g-2">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" name="q" value="@ViewBag.Search" class="form-control" placeholder="Tìm kiếm theo tên sản phẩm, mã slug...">
+                    <button type="submit" class="btn btn-dark"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="admin-card-body">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 80px;">Hình ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th>Thương hiệu</th>
+                        <th>Giá bán</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end" style="width: 260px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var p in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@p.ProductId</td>
+                                <td>
+                                    <img src="@(p.MainImageUrl ?? "https://via.placeholder.com/50")" alt="@p.ProductName" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-truncate" style="max-width: 200px;">@p.ProductName</div>
+                                    <div class="text-muted small text-truncate" style="max-width: 200px;">@p.Slug</div>
+                                </td>
+                                <td>@p.Category?.CategoryName</td>
+                                <td>@p.Brand?.BrandName</td>
+                                <td>
+                                    <div class="fw-bold">@p.Price.ToString("N0")đ</div>
+                                    @if (p.SalePrice.HasValue)
+                                    {
+                                        <div class="text-danger small fw-semibold">Khuyến mãi: @p.SalePrice.Value.ToString("N0")đ</div>
+                                    }
+                                </td>
+                                <td>
+                                    @if (p.IsActive)
+                                    {
+                                        <span class="badge bg-success">Đang bán</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Tạm ẩn</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-area="Admin" asp-controller="Products" asp-action="Variants" asp-route-id="@p.ProductId" class="btn btn-sm btn-outline-dark" title="Biến thể & tồn kho">
+                                            <i class="fas fa-layer-group"></i>
+                                        </a>
+                                        <a asp-area="Admin" asp-controller="Products" asp-action="Edit" asp-route-id="@p.ProductId" class="btn btn-sm btn-outline-primary" title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form asp-area="Admin" asp-controller="Products" asp-action="ToggleStatus" method="post">
+                                            <input type="hidden" name="id" value="@p.ProductId" />
+                                            <button type="submit" class="btn btn-sm @(p.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(p.IsActive ? "Tạm ẩn" : "Hiện lại")">
+                                                <i class="fas @(p.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-area="Admin" asp-controller="Products" asp-action="DeletePermanently" method="post" onsubmit="return confirm('Xóa vĩnh viễn sản phẩm này? Ảnh, biến thể, giỏ hàng, yêu thích và đánh giá liên quan sẽ bị xóa. Thao tác không thể hoàn tác.');">
+                                            <input type="hidden" name="id" value="@p.ProductId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa vĩnh viễn">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="8" class="text-center py-5 text-muted">Không tìm thấy sản phẩm nào.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if ((int)ViewBag.TotalPages > 1)
+    {
+        <div class="p-3 d-flex justify-content-between align-items-center border-top">
+            <div class="text-muted small">Hiển thị trang @ViewBag.CurrentPage / @ViewBag.TotalPages</div>
+            <nav>
+                <ul class="pagination mb-0">
+                    @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="?page=@i&q=@ViewBag.Search">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

@@ -1,0 +1,140 @@
+@model FashionStore.ViewModels.AdminProductViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Chỉnh Sửa Sản Phẩm";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="admin-card mb-4">
+            <div class="admin-card-header d-flex justify-content-between align-items-center">
+                <h6 class="admin-card-title">@ViewData["Title"]</h6>
+                <div class="d-flex gap-2"><a asp-action="Variants" asp-route-id="@Model.ProductId" class="btn btn-sm btn-outline-dark">Biến thể & tồn kho</a><a asp-action="Index" class="btn btn-sm btn-outline-secondary">Quay lại danh sách</a></div>
+            </div>
+            <div class="p-4">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="ProductId" />
+                    <!-- Giữ lại URL ảnh cũ nếu ko up ảnh mới -->
+                    <input type="hidden" asp-for="MainImageUrl" />
+
+                    <div class="row g-4">
+                        <!-- Thông tin cơ bản -->
+                        <div class="col-md-8">
+                            <h6 class="fw-bold mb-3 border-bottom pb-2">Thông tin cơ bản</h6>
+                            
+                            <div class="mb-3">
+                                <label asp-for="ProductName" class="form-label fw-semibold">Tên sản phẩm <span class="text-danger">*</span></label>
+                                <input asp-for="ProductName" class="form-control" id="productName" onkeyup="generateSlug()" />
+                                <span asp-validation-for="ProductName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Slug" class="form-label fw-semibold">Đường dẫn tĩnh (Slug) <span class="text-danger">*</span></label>
+                                <input asp-for="Slug" class="form-control bg-light" id="productSlug" />
+                                <span asp-validation-for="Slug" class="text-danger small"></span>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="CategoryId" class="form-label fw-semibold">Danh mục <span class="text-danger">*</span></label>
+                                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select">
+                                        <option value="">-- Chọn danh mục --</option>
+                                    </select>
+                                    <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="BrandId" class="form-label fw-semibold">Thương hiệu <span class="text-danger">*</span></label>
+                                    <select asp-for="BrandId" asp-items="ViewBag.Brands" class="form-select">
+                                        <option value="">-- Chọn thương hiệu --</option>
+                                    </select>
+                                    <span asp-validation-for="BrandId" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Description" class="form-label fw-semibold">Mô tả sản phẩm</label>
+                                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Cấu hình giá & Hình ảnh -->
+                        <div class="col-md-4">
+                            <h6 class="fw-bold mb-3 border-bottom pb-2">Giá & Hình ảnh</h6>
+
+                            <div class="mb-3">
+                                <label asp-for="Price" class="form-label fw-semibold">Giá gốc (VNĐ) <span class="text-danger">*</span></label>
+                                <input asp-for="Price" type="number" class="form-control" />
+                                <span asp-validation-for="Price" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="SalePrice" class="form-label fw-semibold">Giá khuyến mãi (VNĐ)</label>
+                                <input asp-for="SalePrice" type="number" class="form-control" />
+                                <span asp-validation-for="SalePrice" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="ImageFile" class="form-label fw-semibold">Thay đổi ảnh đại diện</label>
+                                <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" id="imageInput" />
+                                <div class="small text-muted mt-1">Để trống nếu không muốn thay đổi ảnh</div>
+                                <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                                <div class="mt-2 text-center">
+                                    <img id="imagePreview" src="@(Model.MainImageUrl ?? "https://via.placeholder.com/200?text=Ch%C6%B0a+c%C3%B3+%E1%BA%A3nh")" alt="Preview" class="img-fluid rounded border" style="max-height: 200px; display: block;" />
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold mb-3 border-bottom pb-2">Trạng thái</h6>
+                            <div class="form-check form-switch mb-2">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" id="isActiveCheck">
+                                <label class="form-check-label" for="isActiveCheck">Cho phép bán</label>
+                            </div>
+                            <div class="form-check form-switch mb-4">
+                                <input asp-for="IsFeatured" class="form-check-input" type="checkbox" id="isFeaturedCheck">
+                                <label class="form-check-label" for="isFeaturedCheck">Sản phẩm nổi bật (Featured)</label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-custom w-100 py-3">CẬP NHẬT SẢN PHẨM</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Image preview
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('imagePreview');
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // Simple string-to-slug generator
+        function generateSlug() {
+            let str = document.getElementById('productName').value;
+            str = str.toLowerCase();
+            str = str.replace(/(à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ)/g, 'a');
+            str = str.replace(/(è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ)/g, 'e');
+            str = str.replace(/(ì|í|ị|ỉ|ĩ)/g, 'i');
+            str = str.replace(/(ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ)/g, 'o');
+            str = str.replace(/(ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ)/g, 'u');
+            str = str.replace(/(ỳ|ý|ỵ|ỷ|ỹ)/g, 'y');
+            str = str.replace(/(đ)/g, 'd');
+            str = str.replace(/([^a-z0-9-\s])/g, '');
+            str = str.replace(/(\s+)/g, '-');
+            str = str.replace(/-+/g, '-');
+            str = str.replace(/^-+|-+$/g, '');
+
+            document.getElementById('productSlug').value = str;
+        }
+    </script>
+}

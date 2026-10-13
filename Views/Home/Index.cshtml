@@ -1,0 +1,192 @@
+@model FashionStore.ViewModels.HomeViewModel
+@{
+    ViewData["Title"] = "Trang Chủ";
+    var categoryFallbacks = new[]
+    {
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=900&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=900&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=900&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=900&auto=format&fit=crop"
+    };
+    var sectionIndex = 0;
+}
+
+<section class="hero">
+    <div class="hero-copy">
+        <p class="hero-kicker">Bộ sưu tập 2026</p>
+        <h1 class="hero-title">
+            <span class="line"><span>Định hình</span></span>
+            <span class="line"><span>phong cách</span></span>
+            <span class="line"><span>của bạn.</span></span>
+        </h1>
+        <a class="fs-btn hero-cta" asp-controller="Product" asp-action="Index" data-cursor="→">Mua sắm ngay <span class="arrow">→</span></a>
+        <p class="hero-meta" style="margin-top: 28px;">Thời trang chọn lọc · Mùa 26</p>
+    </div>
+    <div class="hero-visual" data-parallax data-cursor="Explore">
+        <picture>
+            <source media="(max-width: 720px)" srcset="https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=900&h=1500&fit=crop&crop=faces">
+            <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=2000&h=1200&fit=crop" alt="Bộ sưu tập thời trang 2026" fetchpriority="high">
+        </picture>
+        <span class="hero-float">Mẫu 01 — Bộ ảnh</span>
+    </div>
+    <div class="scroll-indicator">Cuộn xuống</div>
+</section>
+
+@if (Model.FeaturedCategories.Any())
+{
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <span class="section-index" data-reveal>@((++sectionIndex).ToString("00")) — Danh mục</span>
+                <h2 class="section-title" data-reveal>Khám phá</h2>
+            </div>
+            <p class="section-note" data-reveal>Mỗi danh mục là một chương trong bộ sưu tập. Di chuột để xem trước.</p>
+        </div>
+        <div class="category-list">
+            @{ var catIndex = 0; }
+            @foreach (var category in Model.FeaturedCategories)
+            {
+                var preview = string.IsNullOrEmpty(category.ImageUrl) ||
+                    (!category.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) && !category.ImageUrl.StartsWith("/", StringComparison.Ordinal))
+                    ? categoryFallbacks[catIndex % categoryFallbacks.Length]
+                    : category.ImageUrl;
+                <a class="category-row" asp-controller="Product" asp-action="Index" asp-route-categoryId="@category.CategoryId" data-cursor="Explore">
+                    <span class="category-meta">0@(catIndex + 1)</span>
+                    <h3>@category.CategoryName</h3>
+                    <span class="category-meta">Xem</span>
+                    <div class="category-preview">
+                        <img src="@preview" alt="@category.CategoryName" loading="lazy">
+                    </div>
+                </a>
+                catIndex++;
+            }
+        </div>
+    </section>
+}
+
+<div class="marquee">
+    <div class="marquee-track" aria-hidden="true">
+        <span>Mùa mới — Mùa mới — Mùa mới — Mùa mới —</span>
+        <span>Mùa mới — Mùa mới — Mùa mới — Mùa mới —</span>
+    </div>
+    <button class="marquee-toggle" type="button" aria-label="Tạm dừng chuyển động" aria-pressed="false" title="Tạm dừng chuyển động">
+        <i class="fas fa-pause" aria-hidden="true"></i>
+    </button>
+</div>
+
+<section class="manifesto">
+    <p class="section-index" data-reveal>Manifesto</p>
+    <p class="manifesto-line" data-reveal>Quần áo không chỉ là hàng hóa.</p>
+    <p class="manifesto-line" data-reveal>Đó là dấu ấn tiếp theo của bạn.</p>
+    <a class="fs-btn" asp-controller="Product" asp-action="Index">Khám phá ngay <span class="arrow">→</span></a>
+</section>
+
+@if (Model.NewArrivals.Any())
+{
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <span class="section-index" data-reveal>@((++sectionIndex).ToString("00")) — Hàng mới</span>
+                <h2 class="section-title" data-reveal>Mới về</h2>
+            </div>
+            <a class="fs-btn" asp-controller="Product" asp-action="Index">Xem tất cả <span class="arrow">→</span></a>
+        </div>
+        <div class="editorial-grid">
+            @foreach (var product in Model.NewArrivals)
+            {
+                @await Html.PartialAsync("_ProductCard", product)
+            }
+        </div>
+    </section>
+}
+
+@if (Model.MaxSaleDiscountPercent > 0)
+{
+<section class="campaign" id="sale" data-parallax>
+    <div class="campaign-media" data-clip>
+        <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1800&auto=format&fit=crop" alt="Sale campaign" loading="lazy">
+    </div>
+    <div class="campaign-copy">
+        <p class="hero-kicker" style="color: #f5f4f0;" data-reveal>Ưu đãi chớp nhoáng</p>
+        <h2 data-reveal>Giảm đến @Model.MaxSaleDiscountPercent%</h2>
+        <a class="fs-btn" asp-controller="Product" asp-action="Index" asp-route-onSale="true" style="background: #f5f4f0; color: #111; border-color: #f5f4f0;">Mua ưu đãi <span class="arrow">→</span></a>
+    </div>
+</section>
+}
+
+@if (Model.BestSellers.Any())
+{
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <span class="section-index" data-reveal>@((++sectionIndex).ToString("00")) — Được quan tâm</span>
+                <h2 class="section-title" data-reveal>Xem nhiều</h2>
+            </div>
+            <p class="section-note" data-reveal>Những thiết kế được khách ghé xem nhiều.</p>
+        </div>
+        <div class="editorial-grid">
+            @foreach (var product in Model.BestSellers)
+            {
+                @await Html.PartialAsync("_ProductCard", product)
+            }
+        </div>
+    </section>
+}
+
+@if (Model.SaleProducts.Any())
+{
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <span class="section-index" data-reveal>@((++sectionIndex).ToString("00")) — Ưu đãi</span>
+                <h2 class="section-title" data-reveal>Đang giảm giá</h2>
+            </div>
+        </div>
+        <div class="editorial-grid">
+            @foreach (var product in Model.SaleProducts)
+            {
+                @await Html.PartialAsync("_ProductCard", product)
+            }
+        </div>
+    </section>
+}
+
+@if (Model.NewArrivals.Any())
+{
+    <section class="lookbook section" id="lookbook">
+        <div class="section-head">
+            <div>
+                <span class="section-index" data-reveal>@((++sectionIndex).ToString("00")) — Lookbook</span>
+                <h2 class="section-title" data-reveal>Cảm hứng mùa này</h2>
+            </div>
+            <p class="section-note" data-reveal>Những thiết kế nổi bật, xem gần hơn qua từng khung hình.</p>
+        </div>
+        <div class="lookbook-track">
+            @{ var look = 1; }
+            @foreach (var product in Model.NewArrivals.Take(6))
+            {
+                var lookImg = EditorialMedia.Product(product.ProductId, product.MainImageUrl);
+                <figure class="lookbook-item">
+                    <a href="/products/@product.Slug">
+                        <img src="@lookImg" alt="@product.ProductName" loading="lazy">
+                    </a>
+                    <figcaption>Look 0@(look) — @product.ProductName</figcaption>
+                </figure>
+                look++;
+            }
+        </div>
+    </section>
+}
+
+@if (Model.FeaturedBrands.Any())
+{
+    <section class="section" style="padding-top: 0;">
+        <span class="section-index" data-reveal>Houses</span>
+        <div class="brand-row" data-reveal>
+            @foreach (var brand in Model.FeaturedBrands)
+            {
+                <span>@brand.BrandName</span>
+            }
+        </div>
+    </section>
+}

@@ -1,0 +1,79 @@
+@model IEnumerable<FashionStore.Models.Brand>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản Lý Thương Hiệu";
+}
+
+<div class="admin-card mb-4">
+    <div class="admin-card-header">
+        <h6 class="admin-card-title">Danh Sách Thương Hiệu</h6>
+        <a asp-action="Create" class="btn btn-primary-custom btn-sm">
+            <i class="fas fa-plus me-1"></i> Thêm Thương Hiệu
+        </a>
+    </div>
+
+    <div class="admin-card-body">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 80px;">Logo</th>
+                        <th>Tên thương hiệu</th>
+                        <th>Slug</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end" style="width: 150px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var b in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@b.BrandId</td>
+                                <td>
+                                    <img src="@(b.LogoUrl ?? "https://via.placeholder.com/50")" alt="@b.BrandName" class="rounded" style="width: 50px; height: 50px; object-fit: contain; background: #f8f9fa;">
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@b.BrandName</div>
+                                    @if(!string.IsNullOrEmpty(b.Description)){
+                                        <div class="text-muted small text-truncate" style="max-width: 250px;">@b.Description</div>
+                                    }
+                                </td>
+                                <td class="text-muted small">@b.Slug</td>
+                                <td>
+                                    @if (b.IsActive)
+                                    {
+                                        <span class="badge bg-success">Hiển thị</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Tạm ẩn</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-action="Edit" asp-route-id="@b.BrandId" class="btn btn-sm btn-outline-primary" title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thương hiệu này?');">
+                                            <input type="hidden" name="id" value="@b.BrandId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="6" class="text-center py-5 text-muted">Chưa có thương hiệu nào.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

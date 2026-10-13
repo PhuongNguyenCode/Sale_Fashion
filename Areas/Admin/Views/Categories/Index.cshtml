@@ -1,0 +1,81 @@
+@model IEnumerable<FashionStore.Models.Category>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản Lý Danh Mục";
+}
+
+<div class="admin-card mb-4">
+    <div class="admin-card-header">
+        <h6 class="admin-card-title">Danh Sách Danh Mục</h6>
+        <a asp-action="Create" class="btn btn-primary-custom btn-sm">
+            <i class="fas fa-plus me-1"></i> Thêm Danh Mục
+        </a>
+    </div>
+
+    <div class="admin-card-body">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 80px;">Hình ảnh</th>
+                        <th>Tên danh mục</th>
+                        <th>Slug</th>
+                        <th>Thứ tự</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end" style="width: 150px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@c.CategoryId</td>
+                                <td>
+                                    <img src="@(c.ImageUrl ?? "https://via.placeholder.com/50")" alt="@c.CategoryName" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@c.CategoryName</div>
+                                    @if(!string.IsNullOrEmpty(c.Description)){
+                                        <div class="text-muted small text-truncate" style="max-width: 200px;">@c.Description</div>
+                                    }
+                                </td>
+                                <td class="text-muted small">@c.Slug</td>
+                                <td>@c.DisplayOrder</td>
+                                <td>
+                                    @if (c.IsActive)
+                                    {
+                                        <span class="badge bg-success">Hiển thị</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Tạm ẩn</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-action="Edit" asp-route-id="@c.CategoryId" class="btn btn-sm btn-outline-primary" title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
+                                            <input type="hidden" name="id" value="@c.CategoryId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="7" class="text-center py-5 text-muted">Chưa có danh mục nào.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,33 @@
+@model IEnumerable<FashionStore.Models.WishlistItem>
+@{
+    ViewData["Title"] = "Yêu thích";
+}
+<div class="page-shell shop-page">
+    <p class="section-index">Saved</p>
+    <h1 class="page-heading">Yêu thích</h1>
+    @if (Model.Any())
+    {
+        <div class="shop-grid">
+            @foreach (var item in Model)
+            {
+                <article class="product-card">
+                    <a href="/products/@item.Product!.Slug"><img class="card-img-top" src="@item.Product.MainImageUrl" alt="@item.Product.ProductName" /></a>
+                    <div class="card-body">
+                        <div class="product-brand">@item.Product.Brand?.BrandName</div>
+                        <a href="/products/@item.Product.Slug" class="product-title">@item.Product.ProductName</a>
+                        <div class="product-price">@item.Product.DisplayPrice.ToString("N0")đ</div>
+                        <form method="post" action="/Wishlist/Toggle" class="mt-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@item.ProductId" />
+                            <button class="btn-outline-custom" type="submit">Bỏ yêu thích</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state"><h2 class="page-heading">Chưa có sản phẩm yêu thích.</h2><a class="fs-btn" href="/Product">Khám phá sản phẩm →</a></div>
+    }
+</div>

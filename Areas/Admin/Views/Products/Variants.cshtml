@@ -1,0 +1,38 @@
+@model FashionStore.ViewModels.AdminProductVariantsViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Biến Thể & Tồn Kho";
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div><h5 class="mb-1">@Model.Product.ProductName</h5><div class="text-muted small">@Model.Product.Category?.CategoryName · @Model.Product.Brand?.BrandName · Giá gốc @Model.Product.Price.ToString("N0")đ</div></div>
+    <a asp-action="Edit" asp-route-id="@Model.Product.ProductId" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Quay lại sản phẩm</a>
+</div>
+
+<div class="admin-card mb-4">
+    <div class="admin-card-header"><h6 class="admin-card-title">Thêm biến thể mới</h6></div>
+    <div class="p-4"><form asp-action="AddVariant" method="post" class="row g-3 align-items-end">
+        <input type="hidden" name="productId" value="@Model.Product.ProductId" />
+        <div class="col-md-2"><label class="form-label fw-semibold">Size</label><select name="sizeId" class="form-select" required><option value="">Chọn size</option>@foreach (var size in Model.Sizes) { <option value="@size.SizeId">@size.SizeName</option> }</select></div>
+        <div class="col-md-2"><label class="form-label fw-semibold">Màu</label><select name="colorId" class="form-select" required><option value="">Chọn màu</option>@foreach (var color in Model.Colors) { <option value="@color.ColorId">@color.ColorName</option> }</select></div>
+        <div class="col-md-2"><label class="form-label fw-semibold">Tồn kho</label><input name="stockQuantity" type="number" min="0" value="0" class="form-control" required /></div>
+        <div class="col-md-2"><label class="form-label fw-semibold">Cộng thêm (đ)</label><input name="additionalPrice" type="number" min="0" value="0" class="form-control" required /></div>
+        <div class="col-md-2"><label class="form-label fw-semibold">SKU</label><input name="sku" class="form-control" placeholder="Tự tạo nếu để trống" /></div>
+        <div class="col-md-2"><button type="submit" class="btn btn-primary-custom w-100"><i class="fas fa-plus me-1"></i>Thêm</button></div>
+    </form></div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header"><h6 class="admin-card-title">Danh sách biến thể (@Model.Variants.Count)</h6><span class="text-muted small">Tổng tồn: @Model.Variants.Where(item => item.IsActive).Sum(item => item.StockQuantity)</span></div>
+    <div class="admin-card-body"><div class="table-responsive"><table class="table admin-table mb-0 align-middle">
+        <thead><tr><th>Size</th><th>Màu</th><th>SKU</th><th>Tồn kho</th><th>Cộng thêm</th><th>Giá thực bán</th><th>Trạng thái</th><th class="text-end">Lưu</th></tr></thead>
+        <tbody>
+        @if (Model.Variants.Any()) { foreach (var variant in Model.Variants) { var formId = $"variant-form-{variant.VariantId}"; <tr>
+            <td class="fw-semibold">@variant.Size?.SizeName</td><td><span class="d-inline-block rounded-circle border me-1" style="width:12px;height:12px;background:@(variant.Color?.ColorCode ?? "#eee")"></span>@variant.Color?.ColorName</td>
+            <td><input form="@formId" name="sku" value="@variant.SKU" class="form-control form-control-sm" /></td><td><input form="@formId" name="stockQuantity" type="number" min="0" value="@variant.StockQuantity" class="form-control form-control-sm" style="min-width:85px" /></td><td><input form="@formId" name="additionalPrice" type="number" min="0" value="@variant.AdditionalPrice" class="form-control form-control-sm" style="min-width:105px" /></td>
+            <td class="fw-semibold">@((Model.Product.DisplayPrice + variant.AdditionalPrice).ToString("N0"))đ</td><td><div class="form-check form-switch"><input form="@formId" name="isActive" value="true" checked="@variant.IsActive" class="form-check-input" type="checkbox" /><input form="@formId" name="isActive" value="false" type="hidden" /></div></td>
+            <td class="text-end"><button form="@formId" class="btn btn-sm btn-outline-primary" type="submit">Lưu</button><form id="@formId" asp-action="UpdateVariant" method="post"><input type="hidden" name="productId" value="@Model.Product.ProductId" /><input type="hidden" name="variantId" value="@variant.VariantId" /></form></td>
+        </tr> } } else { <tr><td colspan="8" class="text-center text-muted py-5">Chưa có biến thể. Hãy thêm size và màu để sản phẩm có thể bán.</td></tr> }
+        </tbody>
+    </table></div></div>
+</div>

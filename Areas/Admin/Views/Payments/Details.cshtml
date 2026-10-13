@@ -1,0 +1,282 @@
+@model FashionStore.Models.Payment
+
+@{
+    ViewData["Title"] = "Payment Details";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-credit-card"></i> Payment Details</h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Payment Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Payment Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Payment ID:</th>
+                            <td><strong>#@Model.PaymentId</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Order Code:</th>
+                            <td><strong>@Model.Order?.OrderCode</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Transaction ID:</th>
+                            <td>@(Model.TransactionId ?? "N/A")</td>
+                        </tr>
+                        <tr>
+                            <th>Amount:</th>
+                            <td><strong class="text-success">@Model.Amount.ToString("N0") VNĐ</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Payment Method:</th>
+                            <td><span class="badge bg-secondary">@Model.PaymentMethod</span></td>
+                        </tr>
+                        <tr>
+                            <th>Gateway:</th>
+                            <td>@(Model.PaymentGateway ?? Model.PaymentMethod)</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                @{
+                                    var statusClass = Model.Status switch
+                                    {
+                                        "Paid" => "success",
+                                        "Pending" => "warning",
+                                        "Processing" => "info",
+                                        "Failed" => "danger",
+                                        "Cancelled" => "secondary",
+                                        "Refunded" => "dark",
+                                        "Expired" => "secondary",
+                                        _ => "secondary"
+                                    };
+                                }
+                                <span class="badge bg-@statusClass">@Model.Status</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        </tr>
+                        @if (Model.PaymentDate.HasValue)
+                        {
+                            <tr>
+                                <th>Payment Date:</th>
+                                <td>@Model.PaymentDate.Value.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                            </tr>
+                        }
+                        @if (Model.ExpiresAt.HasValue)
+                        {
+                            <tr>
+                                <th>Expires At:</th>
+                                <td>@Model.ExpiresAt.Value.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                            </tr>
+                        }
+                    </table>
+
+                    <!-- Actions -->
+                    <div class="mt-3">
+                        @if (Model.PaymentMethod == "BankTransfer" && Model.Status == "Pending")
+                        {
+                            <form asp-action="Confirm" asp-route-id="@Model.PaymentId" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success" onclick="return confirm('Confirm this payment?')">
+                                    <i class="fas fa-check"></i> Confirm Payment
+                                </button>
+                            </form>
+                        }
+                        @if (Model.Status == "Paid")
+                        {
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#refundModal">
+                                <i class="fas fa-undo"></i> Refund
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-shopping-cart"></i> Order Information</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Order != null)
+                    {
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Order Code:</th>
+                                <td><strong>@Model.Order.OrderCode</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Customer:</th>
+                                <td>
+                                    @Model.Order.FullName<br/>
+                                    <small class="text-muted">@Model.Order.Email | @Model.Order.Phone</small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Address:</th>
+                                <td>@Model.Order.Address, @Model.Order.City</td>
+                            </tr>
+                            <tr>
+                                <th>Subtotal:</th>
+                                <td>@Model.Order.SubTotal.ToString("N0") VNĐ</td>
+                            </tr>
+                            <tr>
+                                <th>Discount:</th>
+                                <td>-@Model.Order.DiscountAmount.ToString("N0") VNĐ</td>
+                            </tr>
+                            <tr>
+                                <th>Shipping:</th>
+                                <td>@Model.Order.ShippingFee.ToString("N0") VNĐ</td>
+                            </tr>
+                            <tr>
+                                <th>Total:</th>
+                                <td><strong class="text-success">@Model.Order.TotalAmount.ToString("N0") VNĐ</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Order Status:</th>
+                                <td><span class="badge bg-info">@Model.Order.Status</span></td>
+                            </tr>
+                        </table>
+
+                        <div class="mt-3">
+                            <a asp-area="Admin" asp-controller="Orders" asp-action="Detail" asp-route-id="@Model.Order.OrderId" class="btn btn-primary btn-sm">
+                                <i class="fas fa-external-link-alt"></i> View Full Order
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-history"></i> Transaction History</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Transactions != null && Model.Transactions.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Gateway</th>
+                                <th>External Transaction ID</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Response Code</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var transaction in Model.Transactions.OrderByDescending(t => t.CreatedAt))
+                            {
+                                <tr>
+                                    <td>@transaction.TransactionId</td>
+                                    <td><span class="badge bg-secondary">@transaction.Gateway</span></td>
+                                    <td><code>@transaction.ExternalTransactionId</code></td>
+                                    <td>@transaction.Amount.ToString("N0") @transaction.Currency</td>
+                                    <td><span class="badge bg-info">@transaction.Status</span></td>
+                                    <td>@(transaction.ResponseCode ?? "N/A")</td>
+                                    <td>@transaction.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(transaction.RawResponse))
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#responseModal@(transaction.TransactionId)">
+                                                <i class="fas fa-code"></i> View
+                                            </button>
+
+                                            <!-- Response Modal -->
+                                            <div class="modal fade" id="responseModal@(transaction.TransactionId)" tabindex="-1">
+                                                <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Gateway Response</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <pre class="bg-light p-3"><code>@transaction.RawResponse</code></pre>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted text-center">No transactions recorded</p>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Refund Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Refund" asp-route-id="@Model.PaymentId" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Refund Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> This will refund <strong>@Model.Amount.ToString("N0") VNĐ</strong> and cancel the order.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Refund Reason:</label>
+                        <textarea name="reason" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-undo"></i> Process Refund
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

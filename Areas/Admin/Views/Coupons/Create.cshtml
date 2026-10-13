@@ -1,0 +1,3 @@
+@model FashionStore.Models.Coupon
+@{ Layout = "_Layout"; ViewData["Title"] = "Tạo Mã Giảm Giá"; }
+@await Html.PartialAsync("_Form", Model, new ViewDataDictionary(ViewData) { ["SubmitText"] = "TẠO MÃ GIẢM GIÁ" })

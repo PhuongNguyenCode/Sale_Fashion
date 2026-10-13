@@ -1,0 +1,162 @@
+@model IEnumerable<FashionStore.Models.Payment>
+
+@{
+    ViewData["Title"] = "Payment Management";
+    var currentStatus = ViewBag.CurrentStatus as string;
+    var currentMethod = ViewBag.CurrentMethod as string;
+    var currentSearch = ViewBag.CurrentSearch as string;
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+    var totalCount = (int)ViewBag.TotalCount;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-credit-card"></i> Payment Management</h2>
+        <div>
+            <span class="badge bg-info">Total: @totalCount payments</span>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="Pending" selected="@(currentStatus == "Pending")">Pending</option>
+                        <option value="Processing" selected="@(currentStatus == "Processing")">Processing</option>
+                        <option value="Paid" selected="@(currentStatus == "Paid")">Paid</option>
+                        <option value="Failed" selected="@(currentStatus == "Failed")">Failed</option>
+                        <option value="Cancelled" selected="@(currentStatus == "Cancelled")">Cancelled</option>
+                        <option value="Refunded" selected="@(currentStatus == "Refunded")">Refunded</option>
+                        <option value="Expired" selected="@(currentStatus == "Expired")">Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Payment Method</label>
+                    <select name="method" class="form-select">
+                        <option value="">All Methods</option>
+                        <option value="COD" selected="@(currentMethod == "COD")">COD</option>
+                        <option value="BankTransfer" selected="@(currentMethod == "BankTransfer")">Bank Transfer</option>
+                        <option value="ZaloPay" selected="@(currentMethod == "ZaloPay")">ZaloPay</option>
+                        <option value="Stripe" selected="@(currentMethod == "Stripe")">Stripe</option>
+                        <option value="PayPal" selected="@(currentMethod == "PayPal")">PayPal</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" value="@currentSearch" class="form-control" placeholder="Order code or Transaction ID" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Order Code</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var payment in Model)
+                            {
+                                <tr>
+                                    <td>@payment.PaymentId</td>
+                                    <td>
+                                        <strong>@payment.Order?.OrderCode</strong>
+                                    </td>
+                                    <td>
+                                        @if (payment.Order?.User != null)
+                                        {
+                                            <span>@payment.Order.User.FullName</span><br/>
+                                            <small class="text-muted">@payment.Order.User.Email</small>
+                                        }
+                                        else
+                                        {
+                                            <span>@payment.Order?.FullName</span><br/>
+                                            <small class="text-muted">@payment.Order?.Email</small>
+                                        }
+                                    </td>
+                                    <td><strong>@payment.Amount.ToString("N0") VNĐ</strong></td>
+                                    <td>
+                                        <span class="badge bg-secondary">@payment.PaymentMethod</span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var statusClass = payment.Status switch
+                                            {
+                                                "Paid" => "success",
+                                                "Pending" => "warning",
+                                                "Processing" => "info",
+                                                "Failed" => "danger",
+                                                "Cancelled" => "secondary",
+                                                "Refunded" => "dark",
+                                                "Expired" => "secondary",
+                                                _ => "secondary"
+                                            };
+                                        }
+                                        <span class="badge bg-@statusClass">@payment.Status</span>
+                                    </td>
+                                    <td>
+                                        <small>@payment.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@payment.PaymentId" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No payments found</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <nav aria-label="Payment pagination" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" 
+                                   asp-route-page="@i" 
+                                   asp-route-status="@currentStatus"
+                                   asp-route-method="@currentMethod"
+                                   asp-route-search="@currentSearch">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>

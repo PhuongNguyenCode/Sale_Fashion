@@ -1,0 +1,174 @@
+@model FashionStore.ViewModels.CartViewModel
+@{
+    ViewData["Title"] = "Giỏ Hàng";
+}
+
+<nav class="page-crumb" aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Giỏ hàng</li>
+    </ol>
+</nav>
+
+<div class="page-shell bag-page">
+    <p class="section-index" data-reveal>Giỏ hàng</p>
+    <h1 class="page-heading" data-reveal>Giỏ hàng của bạn</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model.Items.Any())
+    {
+        <div class="bag-layout">
+            <div class="bag-list">
+                @foreach (var item in Model.Items)
+                {
+                    <article class="bag-item">
+                        <a href="/products/@item.Slug" class="bag-item-media">
+                            <img src="@EditorialMedia.Product(item.ProductId, item.ProductImageUrl)" alt="@item.ProductName" onerror="this.onerror=null;this.src='@EditorialMedia.Product(item.ProductId)';">
+                        </a>
+                        <div class="bag-item-body">
+                            <a href="/products/@item.Slug" class="cart-item-title">@item.ProductName</a>
+                            <p class="cart-item-variant">@item.ColorName · Cỡ @item.SizeName</p>
+                            @if (item.StockQuantity < 5)
+                            {
+                                <p class="bag-stock">Chỉ còn @item.StockQuantity</p>
+                            }
+                            <p class="bag-unit">@item.UnitPrice.ToString("N0")đ</p>
+                            <div class="quantity-selector">
+                                <button type="button" onclick="updateCartItem(@item.CartItemId, @(item.Quantity - 1))" aria-label="Giảm"><i class="fas fa-minus"></i></button>
+                                <input type="number" id="qty-@item.CartItemId" value="@item.Quantity" min="1" max="@item.StockQuantity" onchange="updateCartItem(@item.CartItemId, this.value)" />
+                                <button type="button" onclick="updateCartItem(@item.CartItemId, @(item.Quantity + 1))" aria-label="Tăng"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="bag-item-side">
+                            <span class="bag-subtotal">@item.SubTotal.ToString("N0")đ</span>
+                            <form method="post" action="/Cart/Remove">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                <button type="submit" class="btn-remove-item" title="Xóa" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">Xóa</button>
+                            </form>
+                        </div>
+                    </article>
+                }
+
+                <div class="bag-actions">
+                    <a href="/Product" class="btn-outline-custom">Tiếp tục mua</a>
+                    <form method="post" action="/Cart/Clear">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="filter-reset" onclick="return confirm('Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?');">Xóa giỏ hàng</button>
+                    </form>
+                </div>
+            </div>
+
+            <aside class="cart-summary">
+                <h2>Tóm tắt</h2>
+                <div class="summary-row">
+                    <span>Tạm tính (@Model.TotalItems)</span>
+                    <span>@Model.SubTotal.ToString("N0")đ</span>
+                </div>
+
+                <div class="coupon-block">
+                    <label>Mã giảm giá</label>
+                    @if (string.IsNullOrEmpty(Model.CouponCode))
+                    {
+                        <form method="post" action="/Cart/ApplyCoupon" class="coupon-form">
+                            @Html.AntiForgeryToken()
+                            <input type="text" name="couponCode" class="form-control" placeholder="Nhập mã…" required>
+                            <button type="submit" class="fs-btn">Áp dụng</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="coupon-applied">
+                            <div>
+                                <strong>@Model.CouponCode</strong>
+                                <p>@Model.CouponMessage</p>
+                            </div>
+                            <form method="post" action="/Cart/RemoveCoupon">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-remove-item">Bỏ mã</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+
+                <div class="summary-row text-accent">
+                    <span>Giảm giá</span>
+                    <span>-@Model.DiscountAmount.ToString("N0")đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển</span>
+                    <span>@(Model.ShippingFee == 0 ? "Miễn phí" : Model.ShippingFee.ToString("N0") + "đ")</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng</span>
+                    <span>@Model.Total.ToString("N0")đ</span>
+                </div>
+                <a href="/Checkout" class="fs-btn w-100">Thanh toán <span class="arrow">→</span></a>
+            </aside>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <p class="section-index">Trống</p>
+            <h2 class="page-heading">Giỏ trống.</h2>
+            <p>Khám phá bộ sưu tập và thêm sản phẩm đầu tiên.</p>
+            <a href="/Product" class="fs-btn">Mua sắm ngay <span class="arrow">→</span></a>
+        </div>
+    }
+</div>
+
+<div id="cartAntiForgeryToken" class="d-none">@Html.AntiForgeryToken()</div>
+
+@section Scripts {
+    <script>
+        function updateCartItem(cartItemId, newQuantity) {
+            var input = $('#qty-' + cartItemId);
+            var max = parseInt(input.attr('max'));
+
+            if (newQuantity < 1) return;
+            if (newQuantity > max) {
+                alert('Rất tiếc, bạn chỉ có thể mua tối đa ' + max + ' sản phẩm này.');
+                input.val(max);
+                newQuantity = max;
+            }
+
+            var token = $('#cartAntiForgeryToken input[name="__RequestVerificationToken"]').val();
+
+            $.ajax({
+                url: '/Cart/UpdateQuantity',
+                type: 'POST',
+                data: {
+                    cartItemId: cartItemId,
+                    quantity: newQuantity,
+                    __RequestVerificationToken: token
+                },
+                success: function (result) {
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert(result.message || 'Có lỗi xảy ra.');
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    alert('Lỗi kết nối đến máy chủ.');
+                }
+            });
+        }
+    </script>
+}

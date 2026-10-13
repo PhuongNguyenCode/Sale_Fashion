@@ -1,0 +1,34 @@
+@model IEnumerable<FashionStore.Models.Coupon>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản Lý Mã Giảm Giá";
+}
+
+<div class="admin-card mb-4">
+    <div class="admin-card-header"><h6 class="admin-card-title">Danh Sách Mã Giảm Giá</h6><a asp-action="Create" class="btn btn-primary-custom btn-sm"><i class="fas fa-plus me-1"></i> Thêm mã</a></div>
+    <div class="admin-card-body"><div class="table-responsive"><table class="table admin-table mb-0 align-middle">
+        <thead><tr><th>Mã</th><th>Ưu đãi</th><th>Điều kiện</th><th>Thời hạn</th><th>Lượt dùng</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+        <tbody>
+        @if (Model.Any())
+        {
+            @foreach (var coupon in Model)
+            {
+                var expired = coupon.EndDate.HasValue && coupon.EndDate.Value.Date < DateTime.Today;
+                <tr>
+                    <td><div class="fw-bold">@coupon.CouponCode</div><div class="text-muted small">@coupon.Description</div></td>
+                    <td>@(coupon.DiscountType == "Percent" ? $"Giảm {coupon.DiscountValue:N0}%" : $"Giảm {coupon.DiscountValue:N0}đ")</td>
+                    <td class="small">Tối thiểu: @(coupon.MinOrderAmount?.ToString("N0") ?? "0")đ<br />Tối đa: @(coupon.MaxDiscountAmount?.ToString("N0") ?? "Không giới hạn")@(coupon.MaxDiscountAmount.HasValue ? "đ" : "")</td>
+                    <td class="small">@(coupon.StartDate?.ToString("dd/MM/yy") ?? "Ngay") — @(coupon.EndDate?.ToString("dd/MM/yy") ?? "Không hạn")</td>
+                    <td>@coupon.UsedCount / @(coupon.UsageLimit?.ToString() ?? "∞")</td>
+                    <td><span class="badge @(!coupon.IsActive || expired ? "bg-secondary" : "bg-success")">@(!coupon.IsActive ? "Đã tắt" : expired ? "Hết hạn" : "Đang dùng")</span></td>
+                    <td class="text-end"><div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Edit" asp-route-id="@coupon.CouponId" class="btn btn-sm btn-outline-primary" title="Sửa"><i class="fas fa-edit"></i></a>
+                        <form asp-action="ToggleStatus" method="post"><input type="hidden" name="id" value="@coupon.CouponId" /><button class="btn btn-sm btn-outline-secondary" title="Bật/tắt" type="submit"><i class="fas @(coupon.IsActive ? "fa-toggle-on" : "fa-toggle-off")"></i></button></form>
+                    </div></td>
+                </tr>
+            }
+        }
+        else { <tr><td colspan="7" class="text-center text-muted py-5">Chưa có mã giảm giá nào.</td></tr> }
+        </tbody>
+    </table></div></div>
+</div>

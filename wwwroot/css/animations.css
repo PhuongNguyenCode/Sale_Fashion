@@ -1,101 +1,150 @@
-/* Motion system — initial states + keyframes */
+/* Restrained motion system. Content stays visible unless JS successfully arms reveals. */
+:root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-fast: 180ms;
+  --motion-medium: 280ms;
+}
 
-.hero-kicker,
-.hero-title .line span,
-.hero-cta,
-.hero-meta,
-.scroll-indicator,
-.hero-visual img,
+body.motion-ready [data-reveal],
+body.motion-ready .category-row,
+body.motion-ready .product-card,
+body.motion-ready .bag-item,
+body.motion-ready .pdp-info,
+body.motion-ready .product-gallery,
+body.motion-ready .cart-summary,
+body.motion-ready .checkout-layout,
+body.motion-ready .auth-card,
+body.motion-ready .site-footer .footer-grid,
+body.motion-ready .site-footer .footer-bottom {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 620ms var(--motion-ease), transform 620ms var(--motion-ease);
+}
+
+body.motion-ready [data-reveal].is-in,
+body.motion-ready .category-row.is-in,
+body.motion-ready .product-card.is-in,
+body.motion-ready .bag-item.is-in,
+body.motion-ready .pdp-info.is-in,
+body.motion-ready .product-gallery.is-in,
+body.motion-ready .cart-summary.is-in,
+body.motion-ready .checkout-layout.is-in,
+body.motion-ready .auth-card.is-in,
+body.motion-ready .site-footer .footer-grid.is-in,
+body.motion-ready .site-footer .footer-bottom.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+body.motion-ready [data-clip] {
+  clip-path: inset(0);
+}
+
+body.motion-ready [data-clip].is-in {
+  animation: editorial-reveal 780ms var(--motion-ease) both;
+}
+
+@keyframes editorial-reveal {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0); }
+}
+
+.hero-visual img {
+  transform: scale(1.025);
+  transition: transform 1200ms var(--motion-ease);
+}
+.hero-visual.is-ready img { transform: scale(1); }
+
+.nav-link-item,
+.nav-action,
 .nav-logo,
-.nav-menu,
-.nav-actions {
-  will-change: transform, opacity;
+.fs-btn,
+.btn-primary-custom,
+.btn-outline-custom,
+.thumbnail-item,
+.variant-size,
+.payment-method-card {
+  transition: color var(--motion-medium) var(--motion-ease), background-color var(--motion-medium) var(--motion-ease), border-color var(--motion-medium) var(--motion-ease), transform var(--motion-medium) var(--motion-ease), box-shadow var(--motion-medium) var(--motion-ease), opacity var(--motion-medium) var(--motion-ease);
 }
 
-.hero-visual {
-  clip-path: inset(0 0 0 0);
-  animation: heroClip 1.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+.nav-menu { transition: opacity 240ms var(--motion-ease), transform 240ms var(--motion-ease); }
+.nav-link-item { position: relative; }
+.nav-link-item::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -5px;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 260ms var(--motion-ease);
 }
+.nav-link-item:hover::after,
+.nav-link-item:focus-visible::after { transform: scaleX(1); transform-origin: left; }
 
-@keyframes heroClip {
-  from { clip-path: inset(100% 0 0 0); }
-  to { clip-path: inset(0 0 0 0); }
+.product-card .card-img-top,
+.product-card .card-img-hover {
+  transition: transform 700ms var(--motion-ease), opacity 420ms var(--motion-ease);
 }
+.product-card:hover .card-img-top,
+.product-card:focus-within .card-img-top,
+.product-card:hover .card-img-hover,
+.product-card:focus-within .card-img-hover { transform: scale(1.035); }
+.product-card .card-actions { transition: opacity 240ms var(--motion-ease), transform 240ms var(--motion-ease); }
+.product-card .btn-action { transition: transform 180ms var(--motion-ease), background-color 180ms var(--motion-ease); }
+.product-card .btn-action:hover { transform: translateY(-2px); }
 
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(50px);
+.main-image-container img { transition: opacity 220ms var(--motion-ease), transform 500ms var(--motion-ease); }
+.main-image-container img.is-changing { opacity: .35; transform: scale(.99); }
+.thumbnail-item:hover,
+.thumbnail-item:focus-visible { transform: translateY(-2px); }
+
+.fs-btn:active,
+.btn-primary-custom:active,
+.btn-outline-custom:active,
+.btn-action:active { transform: scale(.98); }
+
+.bag-item,
+.order-line,
+.payment-method-card { transition: transform 220ms var(--motion-ease), border-color 220ms var(--motion-ease), box-shadow 220ms var(--motion-ease); }
+.payment-method-card:hover,
+.payment-method-card:focus-within { transform: translateY(-2px); }
+.payment-method-card.selected { box-shadow: 0 0 0 1px currentColor; }
+
+.mobile-menu:not([hidden]),
+.search-overlay:not([hidden]) { animation: overlay-in 240ms var(--motion-ease) both; }
+.mobile-menu-inner a { transition: opacity 300ms var(--motion-ease), transform 300ms var(--motion-ease); }
+.mobile-menu.is-open .mobile-menu-inner a { animation: menu-link-in 360ms var(--motion-ease) both; }
+.mobile-menu.is-open .mobile-menu-inner a:nth-child(2) { animation-delay: 35ms; }
+.mobile-menu.is-open .mobile-menu-inner a:nth-child(3) { animation-delay: 70ms; }
+.mobile-menu.is-open .mobile-menu-inner a:nth-child(4) { animation-delay: 105ms; }
+.mobile-menu.is-open .mobile-menu-inner a:nth-child(5) { animation-delay: 140ms; }
+.mobile-menu.is-open .mobile-menu-inner a:nth-child(6) { animation-delay: 175ms; }
+
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes menu-link-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (hover: none), (max-width: 720px) {
+  .product-card:hover .card-img-top,
+  .product-card:focus-within .card-img-top { transform: none; }
 }
-
-[data-reveal].is-in {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-[data-clip] {
-  clip-path: inset(100% 0 0 0);
-}
-
-[data-clip].is-in {
-  clip-path: inset(0 0 0 0);
-  transition: clip-path 1.1s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.page-inner [data-clip] {
-  clip-path: none;
-}
-
-.category-row {
-  opacity: 0;
-  transform: translateY(24px);
-}
-
-.category-row.is-in {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.mobile-menu-inner a {
-  opacity: 0;
-  transform: translateY(24px);
-}
-
-.mobile-menu.is-open .mobile-menu-inner a {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.mobile-menu.is-open .mobile-menu-inner a:nth-child(1) { transition-delay: 0.05s; }
-.mobile-menu.is-open .mobile-menu-inner a:nth-child(2) { transition-delay: 0.1s; }
-.mobile-menu.is-open .mobile-menu-inner a:nth-child(3) { transition-delay: 0.15s; }
-.mobile-menu.is-open .mobile-menu-inner a:nth-child(4) { transition-delay: 0.2s; }
-.mobile-menu.is-open .mobile-menu-inner a:nth-child(5) { transition-delay: 0.25s; }
-.mobile-menu.is-open .mobile-menu-inner a:nth-child(6) { transition-delay: 0.3s; }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
   }
-
-  .page-home .nav-logo,
-  .page-home .nav-menu,
-  .page-home .nav-actions,
-  [data-reveal],
-  .category-row,
-  .mobile-menu-inner a {
-    opacity: 1;
-    transform: none;
+  body.motion-ready [data-reveal], body.motion-ready .category-row,
+  body.motion-ready .product-card, body.motion-ready .bag-item,
+  body.motion-ready .pdp-info, body.motion-ready .product-gallery,
+  body.motion-ready .cart-summary, body.motion-ready .checkout-layout,
+  body.motion-ready .auth-card, body.motion-ready .site-footer .footer-grid,
+  body.motion-ready .site-footer .footer-bottom {
+    opacity: 1 !important; transform: none !important;
   }
-
-  .hero-visual,
-  [data-clip] {
-    clip-path: none;
-  }
+  body.motion-ready [data-clip] { clip-path: none !important; animation: none !important; }
 }

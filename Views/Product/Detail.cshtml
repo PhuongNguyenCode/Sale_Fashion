@@ -26,19 +26,19 @@
                     {
                         <span class="product-badge sale">−@Model.Product.DiscountPercent%</span>
                     }
-                    <img id="mainProductImage" src="@pdpImage" alt="@Model.Product.ProductName" onerror="this.onerror=null;this.src='@EditorialMedia.Product(Model.Product.ProductId)';">
+                    <img id="mainProductImage" src="@pdpImage" alt="@Model.Product.ProductName" fetchpriority="high" onerror="this.onerror=null;this.src='@EditorialMedia.Product(Model.Product.ProductId)';">
                 </div>
 
                 @if (galleryImages.Any())
                 {
                     <div class="thumbnail-list">
                         <button type="button" class="thumbnail-item active" onclick="changeImage(this, '@pdpImage')" aria-label="Xem ảnh chính">
-                            <img src="@pdpImage" alt="@Model.Product.ProductName">
+                            <img src="@pdpImage" alt="@Model.Product.ProductName" loading="lazy">
                         </button>
                         @foreach (var imageUrl in galleryImages)
                         {
                             <button type="button" class="thumbnail-item" onclick="changeImage(this, '@imageUrl')" aria-label="Xem ảnh bổ sung">
-                                <img src="@imageUrl" alt="@Model.Product.ProductName" onerror="this.closest('.thumbnail-item').remove()">
+                                <img src="@imageUrl" alt="@Model.Product.ProductName" loading="lazy" onerror="this.closest('.thumbnail-item').remove()">
                             </button>
                         }
                     </div>
@@ -323,9 +323,16 @@
         function changeImage(element, url) {
             $('.thumbnail-item').removeClass('active');
             $(element).addClass('active');
-            $('#mainProductImage').fadeOut(200, function() {
-                $(this).attr('src', url).fadeIn(200);
-            });
+            var image = document.getElementById('mainProductImage');
+            if (!image || image.getAttribute('src') === url) return;
+            image.classList.add('is-changing');
+            var next = new Image();
+            next.onload = function () {
+                image.src = url;
+                requestAnimationFrame(function () { image.classList.remove('is-changing'); });
+            };
+            next.onerror = function () { image.classList.remove('is-changing'); };
+            next.src = url;
         }
 
         function selectColor(element) {

@@ -262,9 +262,6 @@
                 btnLoading.style.display = 'inline-flex';
                 submitBtn.style.opacity = '0.7';
                 
-                // Add form animation
-                document.querySelector('.checkout-layout').style.opacity = '0.6';
-                document.querySelector('.checkout-layout').style.pointerEvents = 'none';
             });
             
             // Smooth scroll to validation errors
@@ -273,31 +270,10 @@
                 const firstInvalid = form.querySelector(':invalid');
                 if (firstInvalid) {
                     firstInvalid.focus();
-                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
                 }
             }, true);
             
-            // Add entrance animations
-            const checkoutFields = document.querySelectorAll('.checkout-fields label');
-            checkoutFields.forEach((field, index) => {
-                field.style.opacity = '0';
-                field.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    field.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                    field.style.opacity = '1';
-                    field.style.transform = 'translateY(0)';
-                }, 100 * index);
-            });
-            
-            paymentCards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, 100 * (checkoutFields.length + index));
-            });
         });
     </script>
 }

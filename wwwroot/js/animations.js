@@ -53,91 +53,48 @@
     },
 
     initScrollReveal: function () {
-      if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") {
-        document.querySelectorAll("[data-reveal], [data-clip], .category-row").forEach(function (el) {
-          el.classList.add("is-in");
+      var revealItems = document.querySelectorAll(
+        "[data-reveal], [data-clip], .category-row, .product-card, .bag-item, .pdp-info, .product-gallery, .cart-summary, .checkout-layout, .auth-card, .site-footer .footer-grid, .site-footer .footer-bottom"
+      );
+      if (!revealItems.length || prefersReducedMotion() || !("IntersectionObserver" in window)) return;
+
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-in");
+          observer.unobserve(entry.target);
         });
-        return;
-      }
+      }, { rootMargin: "0px 0px -7% 0px", threshold: 0.01 });
 
-      gsap.registerPlugin(ScrollTrigger);
+      revealItems.forEach(function (el) { observer.observe(el); });
+      document.body.classList.add("motion-ready");
 
-      if (prefersReducedMotion() || document.body.classList.contains("page-inner")) {
-        document.querySelectorAll("[data-reveal], [data-clip], .category-row").forEach(function (el) {
-          el.classList.add("is-in");
-        });
-        if (document.body.classList.contains("page-inner") && !prefersReducedMotion()) {
-          return;
-        }
-        return;
-      }
-
-      document.querySelectorAll("[data-reveal]").forEach(function (el) {
-        var rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight * 0.95 && rect.bottom > 0) {
-          el.classList.add("is-in");
-          return;
-        }
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top 88%",
-          onEnter: function () { el.classList.add("is-in"); }
-        });
-      });
-
-      document.querySelectorAll("[data-clip]").forEach(function (el) {
-        var rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
-          el.classList.add("is-in");
-          return;
-        }
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top 85%",
-          onEnter: function () { el.classList.add("is-in"); }
-        });
-      });
-
-      document.querySelectorAll(".category-row").forEach(function (el, i) {
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top 90%",
-          onEnter: function () {
-            setTimeout(function () { el.classList.add("is-in"); }, i * 80);
+      // Anchor jumps and fast wheel/touch scrolls can move past an element
+      // between observer updates. Reveal visible/passed items on the next frame.
+      var revealCheckQueued = false;
+      function revealVisibleOrPassed() {
+        revealCheckQueued = false;
+        revealItems.forEach(function (el) {
+          if (el.classList.contains("is-in")) return;
+          var rect = el.getBoundingClientRect();
+          if (rect.bottom < 0 || (rect.top < window.innerHeight && rect.bottom > 0)) {
+            el.classList.add("is-in");
+            observer.unobserve(el);
           }
         });
-      });
-
-      document.querySelectorAll(".hero-title").forEach(function (title) {
-        gsap.to(title, {
-          y: 40,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".hero",
-            start: "top top",
-            end: "bottom top",
-            scrub: true
-          }
-        });
-      });
+      }
+      function scheduleRevealCheck() {
+        if (revealCheckQueued) return;
+        revealCheckQueued = true;
+        window.requestAnimationFrame(revealVisibleOrPassed);
+      }
+      window.addEventListener("scroll", scheduleRevealCheck, { passive: true });
+      window.addEventListener("hashchange", scheduleRevealCheck);
+      scheduleRevealCheck();
     },
 
     initParallax: function () {
-      if (!isDesktop() || prefersReducedMotion() || typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") return;
-      gsap.registerPlugin(ScrollTrigger);
-
-      document.querySelectorAll("[data-parallax] img").forEach(function (img) {
-        gsap.fromTo(img, { yPercent: -8 }, {
-          yPercent: 8,
-          ease: "none",
-          scrollTrigger: {
-            trigger: img.closest("[data-parallax]"),
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true
-          }
-        });
-      });
+      // Keep editorial imagery stable; the restrained hero scale provides depth without scroll work.
     },
 
     initMarquee: function (lenis) {
@@ -172,31 +129,7 @@
         });
       }
 
-      var speed = 1;
-      var target = 1;
-
-      function tick() {
-        target += (speed - target) * 0.08;
-        tween.timeScale(target);
-        requestAnimationFrame(tick);
-      }
-      tick();
-
-      var last = 0;
-      window.addEventListener("scroll", function () {
-        var y = window.scrollY || 0;
-        var delta = Math.abs(y - last);
-        last = y;
-        speed = Math.min(2.4, 1 + delta / 40);
-        window.clearTimeout(track._marqueeTimer);
-        track._marqueeTimer = window.setTimeout(function () { speed = 1; }, 180);
-      }, { passive: true });
-
-      if (lenis) {
-        lenis.on("scroll", function (e) {
-          speed = Math.min(2.4, 1 + Math.abs(e.velocity) / 8);
-        });
-      }
+      if (lenis) return;
     },
 
     initHorizontalScroll: function () {
@@ -266,8 +199,7 @@
     },
 
     initPageTransition: function () {
-      if (prefersReducedMotion() || typeof gsap === "undefined") return;
-      gsap.from("main", { opacity: 0, duration: 0.55, ease: "power2.out" });
+      // Avoid delaying the first interactive paint on transactional pages.
     }
   };
 })();
